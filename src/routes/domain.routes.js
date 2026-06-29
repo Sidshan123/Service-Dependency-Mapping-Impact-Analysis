@@ -8,17 +8,12 @@ const authenticate =
 require("../middleware/auth.middleware");
 
 const {
-    allowOwnerOrLead,
-    canModifyDomain
+    canUpdateDomainName,
+    canManageDomain,
 } = require(
     "../middleware/domain.middleware"
 );
 
-const {
-    canTransferDomainLead
-} = require(
-    "../middleware/domain-transfer.middleware"
-);
 
 const domainController =
 require(
@@ -26,41 +21,37 @@ require(
 );
 
 
-const domainOwnerMiddleware =
-require("../middleware/domain-owner.middleware");
 
 
 
-
+//Domain creation route
 
 router.post(
     "/",
     authenticate,
-    allowOwnerOrLead,
     domainController.createDomain
 );
 
-router.patch(
-    "/:id/lead",
-    authenticate,
-    canTransferDomainLead,
-    domainController.transferDomainLead
-);
+
+//Domain Name modification route
 
 router.patch(
     "/:id/name",
     authenticate,
-    canModifyDomain,
+    canUpdateDomainName,
     domainController.updateDomainName
 );
 
+//Domain deletion route
 
 router.delete(
     "/:id",
     authenticate,
-    canModifyDomain,
+    canManageDomain,
     domainController.deleteDomain
 );
+
+//Domain retrieval route
 
 
 router.get(
@@ -69,12 +60,11 @@ router.get(
     domainController.getDomains
 );
 
-router.patch(
-    "/:id/lead",
-    authenticate,
-    domainOwnerMiddleware,
-    domainController.changeDomainLead
-);
+
+
+
+
+
 
 
 

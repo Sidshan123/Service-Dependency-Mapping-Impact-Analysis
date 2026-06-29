@@ -149,7 +149,71 @@ async function canModifyWorkspace(
 }
 
 
+async function canOwnerManageDomainLead(
+    req,
+    res,
+    next
+){
+
+    const domainId =
+    Number(req.params.id);
+
+    const userId =
+    req.user.userId;
+
+    const domain =
+    await prisma.domains.findUnique({
+
+        where:{
+            id:domainId
+        }
+
+    });
+
+    if(!domain){
+
+        return res
+        .status(404)
+        .json({
+            message:"Domain not found"
+        });
+
+    }
+
+    const workspace =
+    await prisma.workspaces.findUnique({
+
+        where:{
+            id:domain.workspace_id
+        }
+
+    });
+
+    if(
+        Number(workspace.owner_user_id)
+        !== userId
+    ){
+
+        return res
+        .status(403)
+        .json({
+
+            message:
+            "Only workspace owner can change domain lead"
+
+        });
+
+    }
+
+    next();
+
+}
+
+
 module.exports = {
     canModifyWorkspace,
     canTransferWorkspaceOwnership,
+    canOwnerManageDomainLead
 };
+
+

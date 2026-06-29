@@ -45,10 +45,9 @@ async function createService(
 
         where:{
 
-            domain_id:
-            Number(domain_id),
+            workspace_id:
+            domain.workspace_id,
 
-            service_name:
             service_name
 
         }
@@ -58,7 +57,7 @@ async function createService(
     if(existingService){
 
         throw new Error(
-            "Service already exists in this domain"
+            "Service already exists in this workspace"
         );
 
     }
@@ -73,7 +72,6 @@ async function createService(
             domain_id:
             Number(domain_id),
 
-            service_name:
             service_name
 
         }
@@ -91,10 +89,14 @@ async function createService(
 
 
 
+
 async function updateServiceName(
     serviceId,
     data
 ){
+
+    serviceId =
+    Number(serviceId);
 
     const {
         service_name
@@ -112,7 +114,7 @@ async function updateServiceName(
     await prisma.services.findUnique({
 
         where:{
-            id:Number(serviceId)
+            id:serviceId
         }
 
     });
@@ -130,14 +132,13 @@ async function updateServiceName(
 
         where:{
 
-            domain_id:
-            currentService.domain_id,
+            workspace_id:
+            currentService.workspace_id,
 
-            service_name:
             service_name,
 
             NOT:{
-                id:Number(serviceId)
+                id:serviceId
             }
 
         }
@@ -147,7 +148,7 @@ async function updateServiceName(
     if(existingService){
 
         throw new Error(
-            "Service name already exists in this domain"
+            "Service name already exists in this workspace"
         );
 
     }
@@ -155,7 +156,7 @@ async function updateServiceName(
     await prisma.services.update({
 
         where:{
-            id:Number(serviceId)
+            id:serviceId
         },
 
         data:{
@@ -244,8 +245,8 @@ async function deleteService(
 }
 
 
-async function getServices(
-    domainId
+async function getWorkspaceServices(
+    workspaceId
 ){
 
     const services =
@@ -253,8 +254,8 @@ async function getServices(
 
         where:{
 
-            domain_id:
-            Number(domainId)
+            workspace_id:
+            Number(workspaceId)
 
         },
 
@@ -262,7 +263,9 @@ async function getServices(
 
             id:true,
 
-            service_name:true
+            service_name:true,
+
+            domain_id:true
 
         },
 
@@ -287,6 +290,6 @@ module.exports = {
     createService,
     updateServiceName,
     deleteService,
-    getServices
+    getWorkspaceServices
 
 };

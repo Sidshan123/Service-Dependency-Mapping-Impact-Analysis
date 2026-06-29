@@ -8,16 +8,23 @@ app.use(
     express.json()
 );
 
+
 const authRoutes =
 require("./routes/auth.routes");
 
 const workspaceRoutes =
 require("./routes/workspace.routes");
 
+const workspaceLeaveRoutes =
+require(
+    "./routes/workspace-leave.routes"
+);
+
 const domainRoutes =
 require("./routes/domain.routes");
 
-
+const serviceRoutes =
+require("./routes/service.routes");
 
 const dependencyRoutes =
 require(
@@ -25,12 +32,19 @@ require(
 );
 
 
-
+//----------------------------------
+// AUTH ROUTES
+//----------------------------------
 
 app.use(
     "/api/auth",
     authRoutes
 );
+
+
+//----------------------------------
+// WORKSPACE ROUTES
+//----------------------------------
 
 app.use(
     "/api/workspaces",
@@ -38,12 +52,24 @@ app.use(
 );
 
 app.use(
+    "/api/workspace-leave",
+    workspaceLeaveRoutes
+);
+
+
+//----------------------------------
+// DOMAIN ROUTES
+//----------------------------------
+
+app.use(
     "/api/domains",
     domainRoutes
 );
 
-const serviceRoutes =
-require("./routes/service.routes");
+
+//----------------------------------
+// SERVICE ROUTES
+//----------------------------------
 
 app.use(
     "/api/services",
@@ -51,11 +77,9 @@ app.use(
 );
 
 
-
-app.use(
-    "/api/services",
-    serviceRoutes
-);
+//----------------------------------
+// DEPENDENCY ROUTES
+//----------------------------------
 
 app.use(
     "/api/dependencies",
@@ -66,7 +90,7 @@ app.use(
 const PORT =
 process.env.PORT || 5000;
 
-app.listen(PORT, () => {
+app.listen(PORT, ()=>{
 
     console.log(
         `Server running on port ${PORT}`
@@ -75,7 +99,5 @@ app.listen(PORT, () => {
 });
 
 
-
-
-
-module.exports = app;
+module.exports =
+app;

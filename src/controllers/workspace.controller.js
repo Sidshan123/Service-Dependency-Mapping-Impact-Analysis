@@ -301,3 +301,148 @@ async(req,res)=>{
     }
 
 };
+
+
+exports.getLeaveOptions =
+async(req,res)=>{
+
+    try{
+
+        const result =
+        await workspaceService
+        .getLeaveOptions(
+
+            req.params.id,
+            req.user.userId
+
+        );
+
+        return res
+        .status(200)
+        .json(result);
+
+    }
+    catch(error){
+
+        return res
+        .status(400)
+        .json({
+
+            message:
+            error.message
+
+        });
+
+    }
+
+};
+
+
+
+exports.transferDomainLeads =
+async(req,res)=>{
+
+    try{
+
+        const result =
+        await workspaceService
+        .transferDomainLeads(
+
+            req.params.id,
+            req.user.userId,
+            req.body
+
+        );
+
+        return res
+        .status(200)
+        .json(result);
+
+    }
+    catch(error){
+
+        return res
+        .status(400)
+        .json({
+
+            message:
+            error.message
+
+        });
+
+    }
+
+};
+
+
+
+exports.getOwnerOptions =
+async(req,res)=>{
+
+    try{
+
+        const result =
+        await workspaceService
+        .getOwnerOptions(
+
+            req.params.id,
+            req.user.userId
+
+        );
+
+        return res
+        .status(200)
+        .json(result);
+
+    }
+    catch(error){
+
+        return res
+        .status(400)
+        .json({
+
+            message:
+            error.message
+
+        });
+
+    }
+
+};
+
+
+
+exports.leaveWorkspace =
+async(req,res)=>{
+
+    try{
+
+        const result =
+        await workspaceService
+        .leaveWorkspace(
+
+            req.params.id,
+            req.user.userId,
+            req.body
+
+        );
+
+        return res
+        .status(200)
+        .json(result);
+
+    }
+    catch(error){
+
+        return res
+        .status(400)
+        .json({
+
+            message:
+            error.message
+
+        });
+
+    }
+
+};

@@ -9,17 +9,25 @@ const workspaceController =
 require("../controllers/workspace.controller");
 
 
-const modifyWorkspaceMiddleware =
+const {
+    canModifyWorkspace
+} = require(
+    "../middleware/workspace.middleware"
+);
+
+const {canTransferWorkspaceOwnership} =
 require("../middleware/workspace.middleware");
 
-const transferWorkspaceOwnershipMiddleware =
-require("../middleware/workspace.middleware");
+
+//workspace creation route
 
 router.post(
     "/",
     authMiddleware,
     workspaceController.createWorkspace
 );
+
+//workspaces retrieval route
 
 
 router.get(
@@ -28,12 +36,15 @@ router.get(
     workspaceController.getWorkspaces
 );
 
+// returns the nodes and  edges of the workspace graph for a given workspace id
 
 router.get(
     "/:id/graph",
     authMiddleware,
     workspaceController.getWorkspaceGraph
 );
+
+//generates the graph and impact report for a given workspace id
 
 
 router.post(
@@ -43,49 +54,57 @@ router.post(
 );
 
 
-
+//workspace name modification route
 
 router.patch(
     "/:id/name",
     authMiddleware,
-    modifyWorkspaceMiddleware,
+    canModifyWorkspace,
     workspaceController.updateWorkspaceName
 );
+
+//workspace ownership transfer route
 
 
 router.patch(
     "/:id/owner",
     authMiddleware,
-    transferWorkspaceOwnershipMiddleware,
+    canTransferWorkspaceOwnership,
     workspaceController.transferWorkspaceOwnership
 );
 
-
+//workspace deletion route
 
 
 router.delete(
     "/:id",
     authMiddleware,
-    modifyWorkspaceMiddleware,
+    canModifyWorkspace,
     workspaceController.deleteWorkspace
 );
+
+//personal workspace name modification route
 
 
 router.patch(
     "/:id/personal-name",
     authMiddleware,
-    modifyWorkspaceMiddleware,
+    canModifyWorkspace,
     workspaceController.updatePersonalWorkspaceName
 );
+
+//personal workspace deletion route
 
 
 router.delete(
     "/:id/personal",
     authMiddleware,
-    modifyWorkspaceMiddleware,
+    canModifyWorkspace,
     workspaceController.deletePersonalWorkspace
 );
 
+
+//personal workspace cloning route
 
 router.post(
     "/:id/clone",
@@ -93,6 +112,8 @@ router.post(
     workspaceController
     .cloneWorkspaceToPersonal
 );
+
+
 
 
 

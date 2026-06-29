@@ -98,15 +98,15 @@ async(req,res)=>{
 };
 
 
-exports.getServices =
+exports.getWorkspaceServices =
 async(req,res)=>{
 
     try{
 
         const result =
         await serviceService
-        .getServices(
-            req.params.domainId
+        .getWorkspaceServices(
+            req.params.workspaceId
         );
 
         return res

@@ -33,62 +33,83 @@ async function createWorkspace(
 
     }
 
-    const existingWorkspace =
-    await prisma.workspaces.findFirst({
+    let existingWorkspace;
 
-        where: {
+    //----------------------------------
+    // TEAM WORKSPACE
+    //----------------------------------
 
-            owner_user_id:
-            userId,
+    if(
+        workspace_type === "TEAM"
+    ){
 
-            workspace_name:
-            workspace_name
+        existingWorkspace =
+        await prisma.workspaces.findFirst({
 
-        }
+            where:{
 
-    });
-
-    if(existingWorkspace){
-
-        throw new Error(
-            "Workspace name already exists. Please choose another workspace name."
-        );
-
-    }
-
-    try{
-
-        await prisma.workspaces.create({
-
-            data:{
-
-                workspace_name:
                 workspace_name,
-
                 workspace_type:
-                workspace_type,
-
-                owner_user_id:
-                userId
+                "TEAM"
 
             }
 
         });
 
-    }
-    catch(error){
-
-        if(error.code === "P2002"){
+        if(existingWorkspace){
 
             throw new Error(
-                "Workspace name already exists. Please choose another workspace name."
+                "Team workspace name already exists"
             );
 
         }
 
-        throw error;
+    }
+
+    //----------------------------------
+    // PERSONAL WORKSPACE
+    //----------------------------------
+
+    else{
+
+        existingWorkspace =
+        await prisma.workspaces.findFirst({
+
+            where:{
+
+                owner_user_id:
+                userId,
+
+                workspace_name,
+                workspace_type:
+                "PERSONAL"
+
+            }
+
+        });
+
+        if(existingWorkspace){
+
+            throw new Error(
+                "Personal workspace name already exists"
+            );
+
+        }
 
     }
+
+    await prisma.workspaces.create({
+
+        data:{
+
+            workspace_name,
+            workspace_type,
+            owner_user_id:
+            userId
+
+        }
+
+    });
 
     return {
 
@@ -322,6 +343,9 @@ async function updatePersonalWorkspaceName(
     data
 ){
 
+    workspaceId =
+    Number(workspaceId);
+
     const {
         workspace_name
     } = data;
@@ -338,10 +362,33 @@ async function updatePersonalWorkspaceName(
     await prisma.workspaces.findUnique({
 
         where:{
-            id:Number(workspaceId)
+            id:workspaceId
         }
 
     });
+
+    if(!workspace){
+
+        throw new Error(
+            "Workspace not found"
+        );
+
+    }
+
+    if(
+        workspace.workspace_type !==
+        "PERSONAL"
+    ){
+
+        throw new Error(
+            "Only PERSONAL workspaces can be updated here"
+        );
+
+    }
+
+    //----------------------------------
+    // PERSONAL UNIQUENESS CHECK
+    //----------------------------------
 
     const existingWorkspace =
     await prisma.workspaces.findFirst({
@@ -351,10 +398,13 @@ async function updatePersonalWorkspaceName(
             owner_user_id:
             workspace.owner_user_id,
 
+            workspace_type:
+            "PERSONAL",
+
             workspace_name,
 
             NOT:{
-                id:Number(workspaceId)
+                id:workspaceId
             }
 
         }
@@ -364,7 +414,7 @@ async function updatePersonalWorkspaceName(
     if(existingWorkspace){
 
         throw new Error(
-            "Workspace name already exists"
+            "Personal workspace name already exists"
         );
 
     }
@@ -372,7 +422,7 @@ async function updatePersonalWorkspaceName(
     await prisma.workspaces.update({
 
         where:{
-            id:Number(workspaceId)
+            id:workspaceId
         },
 
         data:{
@@ -731,6 +781,9 @@ async function updateWorkspaceName(
     data
 ){
 
+    workspaceId =
+    Number(workspaceId);
+
     const {
         workspace_name
     } = data;
@@ -747,7 +800,7 @@ async function updateWorkspaceName(
     await prisma.workspaces.findUnique({
 
         where:{
-            id:Number(workspaceId)
+            id:workspaceId
         }
 
     });
@@ -771,19 +824,22 @@ async function updateWorkspaceName(
 
     }
 
+    //----------------------------------
+    // GLOBAL CHECK FOR TEAM WORKSPACES
+    //----------------------------------
+
     const existingWorkspace =
     await prisma.workspaces.findFirst({
 
         where:{
 
-            owner_user_id:
-            workspace.owner_user_id,
+            workspace_type:
+            "TEAM",
 
-            workspace_name:
             workspace_name,
 
             NOT:{
-                id:Number(workspaceId)
+                id:workspaceId
             }
 
         }
@@ -793,7 +849,7 @@ async function updateWorkspaceName(
     if(existingWorkspace){
 
         throw new Error(
-            "Workspace name already exists"
+            "Team workspace name already exists"
         );
 
     }
@@ -801,14 +857,11 @@ async function updateWorkspaceName(
     await prisma.workspaces.update({
 
         where:{
-            id:Number(workspaceId)
+            id:workspaceId
         },
 
         data:{
-
-            workspace_name:
             workspace_name
-
         }
 
     });
@@ -1304,6 +1357,8 @@ async function generateImpactReport(
 
 
 
+
+
 module.exports = {
 
     createWorkspace,
@@ -1315,6 +1370,7 @@ module.exports = {
     deletePersonalWorkspace,
     cloneWorkspaceToPersonal,
     getWorkspaceGraph,
-    generateImpactReport
+    generateImpactReport,
+    
 
 };

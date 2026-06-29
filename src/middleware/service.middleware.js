@@ -1,7 +1,7 @@
 const prisma =
 require("../config/prisma");
 
-async function canCreateService(
+async function canModifyService(
     req,
     res,
     next
@@ -42,7 +42,7 @@ async function canCreateService(
             .json({
 
                 message:
-                "Only domain lead can create services"
+                "Only domain lead can modify services"
 
             });
 
@@ -67,5 +67,5 @@ async function canCreateService(
 }
 
 module.exports = {
-    canCreateService
+    canModifyService
 };

@@ -103,7 +103,7 @@ model workspace_members {
 
 model workspaces {
   id                BigInt                    @id @default(autoincrement())
-  workspace_name    String                    @db.VarChar(150)
+  workspace_name    String                    @db.VarChar(150) 
   owner_user_id     BigInt
   workspace_type    workspaces_workspace_type
   created_at        DateTime?                 @default(now()) @db.Timestamp(0)

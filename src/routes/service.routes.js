@@ -8,7 +8,7 @@ const authenticate =
 require("../middleware/auth.middleware");
 
 const {
-    canCreateService
+    canModifyService
 } = require(
     "../middleware/service.middleware"
 );
@@ -18,37 +18,26 @@ require(
     "../controllers/service.controller"
 );
 
-const {
-    canModifyService
-} = require(
-    "../middleware/service-update.middleware"
-);
 
-
-
-const {
-    canDeleteService
-} = require(
-    "../middleware/service-delete.middleware"
-);
-
-
-
+// Service creation route
 
 
 router.post(
     "/",
     authenticate,
-    canCreateService,
+    canModifyService,
     serviceController.createService
 );
 
+// Services retrieval route
+
 router.get(
-    "/domain/:domainId",
+    "/workspace/:workspaceId",
     authenticate,
-    serviceController.getServices
+    serviceController.getWorkspaceServices
 );
 
+// Service name modification route
 
 router.patch(
     "/:id/name",
@@ -57,11 +46,12 @@ router.patch(
     serviceController.updateServiceName
 );
 
+// Service deletion route
 
 router.delete(
     "/:id",
     authenticate,
-    canDeleteService,
+    canModifyService,
     serviceController.deleteService
 );
 

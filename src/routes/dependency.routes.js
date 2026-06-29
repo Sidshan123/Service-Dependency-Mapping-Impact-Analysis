@@ -18,12 +18,16 @@ require(
     "../controllers/dependency.controller"
 );
 
+// Dependency creation route
+
 router.post(
     "/",
     authenticate,
     canManageDependency,
     dependencyController.createDependency
 );
+
+// Dependency DELETION route
 
 router.delete(
     "/:id",
