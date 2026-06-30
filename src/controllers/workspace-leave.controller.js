@@ -254,3 +254,107 @@ async(req,res)=>{
     }
 
 };
+
+
+
+
+exports.getDomainLeads =
+async(req,res)=>{
+
+    try{
+
+        const result =
+        await workspaceLeaveService
+        .getDomainLeads(
+            req.params.id
+        );
+
+        return res
+        .status(200)
+        .json(result);
+
+    }
+    catch(error){
+
+        return res
+        .status(400)
+        .json({
+
+            message:
+            error.message
+
+        });
+
+    }
+
+};
+
+
+
+
+exports.getDomainDevelopers =
+async(req,res)=>{
+
+    try{
+
+        const result =
+        await workspaceLeaveService
+        .getDomainDevelopers(
+            req.params.id
+        );
+
+        return res
+        .status(200)
+        .json(result);
+
+    }
+    catch(error){
+
+        return res
+        .status(400)
+        .json({
+
+            message:
+            error.message
+
+        });
+
+    }
+
+};
+
+
+
+exports.removeDeveloper =
+async(req,res)=>{
+
+    try{
+
+        const result =
+        await workspaceLeaveService
+        .removeDeveloper(
+
+            req.params.id,
+            req.params.developerId
+
+        );
+
+        return res
+        .status(200)
+        .json(result);
+
+    }
+    catch(error){
+
+        return res
+        .status(400)
+        .json({
+
+            message:
+            error.message
+
+        });
+
+    }
+
+};

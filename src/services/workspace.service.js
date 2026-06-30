@@ -49,6 +49,7 @@ async function createWorkspace(
             where:{
 
                 workspace_name,
+
                 workspace_type:
                 "TEAM"
 
@@ -81,6 +82,7 @@ async function createWorkspace(
                 userId,
 
                 workspace_name,
+
                 workspace_type:
                 "PERSONAL"
 
@@ -98,27 +100,135 @@ async function createWorkspace(
 
     }
 
-    await prisma.workspaces.create({
+    return await prisma.$transaction(
 
-        data:{
+        async(tx)=>{
 
-            workspace_name,
-            workspace_type,
-            owner_user_id:
-            userId
+            //----------------------------------
+            // CREATE WORKSPACE
+            //----------------------------------
+
+            const workspace =
+            await tx.workspaces.create({
+
+                data:{
+
+                    workspace_name,
+
+                    workspace_type,
+
+                    owner_user_id:
+                    userId
+
+                }
+
+            });
+
+            //----------------------------------
+            // CREATE DOMAIN LEAD
+            // INVITE CODE
+            //----------------------------------
+
+            if(
+                workspace_type ===
+                "TEAM"
+            ){
+
+                const inviteCode =
+                await generateUniqueInviteCode(
+                    tx
+                );
+
+                await tx.workspace_invites
+                .create({
+
+                    data:{
+
+                        workspace_id:
+                        workspace.id,
+
+                        domain_id:
+                        null,
+
+                        role:
+                        "LEAD",
+
+                        invite_code:
+                        inviteCode
+
+                    }
+
+                });
+
+                return {
+
+                    message:
+                    "Workspace created successfully",
+
+                    lead_invite_code:
+                    inviteCode
+
+                };
+
+            }
+
+            return {
+
+                message:
+                "Workspace created successfully"
+
+            };
 
         }
 
-    });
-
-    return {
-
-        message:
-        "Workspace created successfully"
-
-    };
+    );
 
 }
+
+
+
+
+
+async function generateUniqueInviteCode(
+    tx
+){
+
+    while(true){
+
+        const inviteCode =
+
+            Math.floor(
+                100000 +
+                Math.random() * 900000
+            ).toString();
+
+        const existingCode =
+        await tx.workspace_invites
+        .findUnique({
+
+            where:{
+                invite_code:
+                inviteCode
+            }
+
+        });
+
+        if(!existingCode){
+
+            return inviteCode;
+
+        }
+
+    }
+
+}
+
+
+
+
+
+
+
 
 async function getWorkspaces(
     userId
@@ -253,90 +363,7 @@ async function deleteWorkspace(
 }
 
 
-async function transferWorkspaceOwnership(
-    workspaceId,
-    data
-){
 
-    const {
-        owner_user_id
-    } = data;
-
-    if(!owner_user_id){
-
-        throw new Error(
-            "Owner user id is required"
-        );
-
-    }
-
-    const user =
-    await prisma.users.findUnique({
-
-        where:{
-            id:Number(owner_user_id)
-        }
-
-    });
-
-    if(!user){
-
-        throw new Error(
-            "User not found"
-        );
-
-    }
-
-    const lead =
-    await prisma.workspace_members
-    .findFirst({
-
-        where:{
-
-            workspace_id:
-            Number(workspaceId),
-
-            user_id:
-            Number(owner_user_id),
-
-            role:
-            "LEAD"
-
-        }
-
-    });
-
-    if(!lead){
-
-        throw new Error(
-            "New owner must be a domain lead in this workspace"
-        );
-
-    }
-
-    await prisma.workspaces.update({
-
-        where:{
-            id:Number(workspaceId)
-        },
-
-        data:{
-
-            owner_user_id:
-            Number(owner_user_id)
-
-        }
-
-    });
-
-    return {
-
-        message:
-        "Workspace ownership transferred successfully"
-
-    };
-
-}
 
 async function updatePersonalWorkspaceName(
     workspaceId,
@@ -987,7 +1014,6 @@ async function deletePersonalWorkspace(
 
 
 
-
 async function getWorkspaceGraph(
     workspaceId
 ){
@@ -1009,6 +1035,30 @@ async function getWorkspaceGraph(
         }
 
     });
+
+    //----------------------------------
+    // EMPTY GRAPH
+    //----------------------------------
+
+    if(
+        services.length === 0
+    ){
+
+        return {
+
+            graph_exists:
+            false,
+
+            message:
+            "No services found in this workspace",
+
+            nodes:[],
+
+            edges:[]
+
+        };
+
+    }
 
     const dependencies =
     await prisma.dependencies.findMany({
@@ -1075,7 +1125,11 @@ async function getWorkspaceGraph(
 
     return {
 
+        graph_exists:
+        true,
+
         nodes,
+
         edges
 
     };
@@ -1170,6 +1224,9 @@ async function generateImpactReport(
     const serviceDomainMap =
     new Map();
 
+    const serviceNameMap =
+    new Map();
+
     for(
         const service
         of services
@@ -1180,6 +1237,14 @@ async function generateImpactReport(
             Number(service.id),
 
             Number(service.domain_id)
+
+        );
+
+        serviceNameMap.set(
+
+            Number(service.id),
+
+            service.service_name
 
         );
 
@@ -1313,36 +1378,47 @@ async function generateImpactReport(
     );
 
     //--------------------------------------------------
-    // STORE REPORT
+    // RETURN REPORT
     //--------------------------------------------------
 
-    const report =
-    await prisma.impact_reports.create({
+    return {
 
-        data:{
+        root_service_id:
+        Number(root_service_id),
 
-            workspace_id:
-            workspaceId,
+        root_service_name:
+        rootService.service_name,
 
-            root_service_id:
-            Number(
-                root_service_id
-            ),
+        affected_services_count:
+        affectedServicesCount,
 
-            affected_services_count:
-            affectedServicesCount,
+        affected_domains_count:
+        affectedDomainsCount,
 
-            affected_domains_count:
-            affectedDomainsCount,
+        severity_score:
+        severityScore,
 
-            severity_score:
-            severityScore
+        affected_services:
 
-        }
+        Array.from(
+            visited
+        ).map(
 
-    });
+            serviceId => ({
 
-    return report;
+                id:
+                serviceId,
+
+                service_name:
+                serviceNameMap.get(
+                    serviceId
+                )
+
+            })
+
+        )
+
+    };
 
 }
 
@@ -1351,9 +1427,62 @@ async function generateImpactReport(
 
 
 
+async function searchWorkspace(
+    workspaceName
+){
+
+    if(!workspaceName){
+
+        throw new Error(
+            "Workspace name is required"
+        );
+
+    }
+
+    //----------------------------------
+    // SEARCH ONLY TEAM WORKSPACES
+    //----------------------------------
+
+    const workspace =
+    await prisma.workspaces
+    .findFirst({
+
+        where:{
+
+            workspace_name:
+            workspaceName,
+
+            workspace_type:
+            "TEAM"
+
+        },
+
+        select:{
+
+            id:true,
+
+            workspace_name:true,
+
+            workspace_type:true
+
+        }
+
+    });
+
+    if(!workspace){
+
+        throw new Error(
+            "Workspace not found"
+        );
+
+    }
+
+    return workspace;
+
+}
 
 
-
+ 
 
 
 
@@ -1365,12 +1494,11 @@ module.exports = {
     getWorkspaces,
     updateWorkspaceName,
     deleteWorkspace,
-    transferWorkspaceOwnership,
     updatePersonalWorkspaceName,
     deletePersonalWorkspace,
     cloneWorkspaceToPersonal,
     getWorkspaceGraph,
     generateImpactReport,
-    
+    searchWorkspace
 
 };

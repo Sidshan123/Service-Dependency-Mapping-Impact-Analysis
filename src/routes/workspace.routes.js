@@ -18,16 +18,26 @@ const {
 const {canTransferWorkspaceOwnership} =
 require("../middleware/workspace.middleware");
 
+const {canViewWorkspaceGraph} = require(
+    "../middleware/workspace-graph.middleware"
+);
+
+const {
+    validateLeadInviteCode
+} = require(
+    "../middleware/domain-invite.middleware"
+);
 
 //workspace creation route
 
 router.post(
     "/",
     authMiddleware,
-    workspaceController.createWorkspace
+    validateLeadInviteCode,
+    domainController.createDomain
 );
 
-//workspaces retrieval route
+//workspaces retrieval route by userID
 
 
 router.get(
@@ -41,6 +51,7 @@ router.get(
 router.get(
     "/:id/graph",
     authMiddleware,
+    canViewWorkspaceGraph,
     workspaceController.getWorkspaceGraph
 );
 
@@ -50,6 +61,7 @@ router.get(
 router.post(
     "/:id/impact-report",
     authMiddleware,
+    canViewWorkspaceGraph,
     workspaceController.generateImpactReport
 );
 
@@ -61,16 +73,6 @@ router.patch(
     authMiddleware,
     canModifyWorkspace,
     workspaceController.updateWorkspaceName
-);
-
-//workspace ownership transfer route
-
-
-router.patch(
-    "/:id/owner",
-    authMiddleware,
-    canTransferWorkspaceOwnership,
-    workspaceController.transferWorkspaceOwnership
 );
 
 //workspace deletion route
@@ -113,6 +115,18 @@ router.post(
     .cloneWorkspaceToPersonal
 );
 
+
+
+
+
+// routes/workspace.routes.js
+
+router.get(
+    "/search",
+    authMiddleware,
+    workspaceController
+    .searchWorkspace
+);
 
 
 

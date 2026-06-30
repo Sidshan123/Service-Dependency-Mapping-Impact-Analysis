@@ -20,15 +20,21 @@ require(
     "../controllers/domain.controller"
 );
 
+const {
+    validateLeadInviteCode
+} = require(
+    "../middleware/domain-invite.middleware"
+);
 
 
 
 
-//Domain creation route
+// Domain creation route
 
 router.post(
     "/",
     authenticate,
+    validateLeadInviteCode,
     domainController.createDomain
 );
 

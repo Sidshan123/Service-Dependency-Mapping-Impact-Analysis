@@ -1016,6 +1016,172 @@ async function ownerExit(
 
 
 
+async function getDomainLeads(
+    workspaceId
+){
+
+    const domains =
+    await prisma.domains.findMany({
+
+        where:{
+
+            workspace_id:
+            Number(workspaceId)
+
+        },
+
+        include:{
+
+            users:true
+        },
+
+        orderBy:{
+
+            domain_name:
+            "asc"
+
+        }
+
+    });
+
+    return domains.map(
+
+        domain => ({
+
+            domain_id:
+            domain.id,
+
+            domain_name:
+            domain.domain_name,
+
+            lead_id:
+            domain.lead_user_id,
+
+            lead_name:
+            domain.users.name
+
+        })
+
+    );
+
+}
+
+
+async function getDomainDevelopers(
+    domainId
+){
+
+    const developers =
+    await prisma.workspace_members
+    .findMany({
+
+        where:{
+
+            domain_id:
+            Number(domainId),
+
+            role:
+            "DEVELOPER"
+
+        },
+
+        include:{
+            users:true
+        },
+
+        orderBy:{
+
+            users:{
+                name:"asc"
+            }
+
+        }
+
+    });
+
+    return developers.map(
+
+        developer => ({
+
+            id:
+            developer.user_id,
+
+            name:
+            developer.users.name
+
+        })
+
+    );
+
+}
+
+
+
+async function removeDeveloper(
+    domainId,
+    developerId
+){
+
+    const member =
+    await prisma.workspace_members
+    .findFirst({
+
+        where:{
+
+            domain_id:
+            Number(domainId),
+
+            user_id:
+            Number(developerId),
+
+            role:
+            "DEVELOPER"
+
+        }
+
+    });
+
+    if(!member){
+
+        throw new Error(
+            "Developer not found"
+        );
+
+    }
+
+    await prisma.workspace_members
+    .delete({
+
+        where:{
+
+            workspace_id_domain_id_user_id:{
+
+                workspace_id:
+                member.workspace_id,
+
+                domain_id:
+                Number(domainId),
+
+                user_id:
+                Number(developerId)
+
+            }
+
+        }
+
+    });
+
+    return {
+
+        message:
+        "Developer removed successfully"
+
+    };
+
+}
+
+
+
 
 
 
@@ -1027,5 +1193,8 @@ module.exports = {
     getChangeLeadOptions,
     changeDomainLead,
     getOwnerExitOptions,
-    ownerExit 
+    ownerExit,
+    getDomainLeads,
+    getDomainDevelopers,
+    removeDeveloper 
 };

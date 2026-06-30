@@ -20,6 +20,11 @@ require(
 );
 
 
+const {canUpdateDomainName} = require(
+    "../middleware/domain.middleware"
+);
+
+
 // Developer exit
 
 router.delete(
@@ -95,6 +100,47 @@ router.post(
     canModifyWorkspace,
     workspaceLeaveController
     .ownerExit
+);
+
+
+//----------------------------------
+//retreiving the domain leads of a workspace
+//----------------------------------
+
+
+router.get(
+    "/:id/domain-leads",
+    authenticate,
+    canModifyWorkspace,
+    workspaceLeaveController
+    .getDomainLeads
+);
+
+
+
+//----------------------------------
+// Get all developers of a domain
+//----------------------------------
+
+router.get(
+    "/:id/developers",
+    authenticate,
+    canUpdateDomainName,
+    workspaceLeaveController
+    .getDomainDevelopers
+);
+
+
+//----------------------------------
+// Remove developer from domain
+//----------------------------------
+
+router.delete(
+    "/:id/developers/:developerId",
+    authenticate,
+    canUpdateDomainName,
+    workspaceLeaveController
+    .removeDeveloper
 );
 
 

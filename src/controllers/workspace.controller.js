@@ -132,73 +132,6 @@ async(req,res)=>{
 };
 
 
-exports.transferWorkspaceOwnership =
-async(req,res)=>{
-
-    try{
-
-        const result =
-        await workspaceService
-        .transferWorkspaceOwnership(
-
-            req.params.id,
-            req.body
-
-        );
-
-        return res
-        .status(200)
-        .json(result);
-
-    }
-    catch(error){
-
-        return res
-        .status(400)
-        .json({
-
-            message:
-            error.message
-
-        });
-
-    }
-
-};
-
-exports.updatePersonalWorkspaceName =
-async(req,res)=>{
-
-    try{
-
-        const result =
-        await workspaceService
-        .updatePersonalWorkspaceName(
-
-            req.params.id,
-            req.body
-
-        );
-
-        return res
-        .status(200)
-        .json(result);
-
-    }
-    catch(error){
-
-        return res
-        .status(400)
-        .json({
-
-            message:
-            error.message
-
-        });
-
-    }
-
-};
 
 
 exports.deletePersonalWorkspace =
@@ -246,6 +179,42 @@ async(req,res)=>{
 
         return res
         .status(200)
+        .json(result);
+
+    }
+    catch(error){
+
+        return res
+        .status(400)
+        .json({
+
+            message:
+            error.message
+
+        });
+
+    }
+
+};
+
+
+
+exports.cloneWorkspaceToPersonal =
+async(req,res)=>{
+
+    try{
+
+        const result =
+        await workspaceService
+        .cloneWorkspaceToPersonal(
+
+            req.params.id,
+            req.user.userId
+
+        );
+
+        return res
+        .status(201)
         .json(result);
 
     }
@@ -425,6 +394,40 @@ async(req,res)=>{
             req.user.userId,
             req.body
 
+        );
+
+        return res
+        .status(200)
+        .json(result);
+
+    }
+    catch(error){
+
+        return res
+        .status(400)
+        .json({
+
+            message:
+            error.message
+
+        });
+
+    }
+
+};
+
+
+
+
+exports.searchWorkspace =
+async(req,res)=>{
+
+    try{
+
+        const result =
+        await workspaceService
+        .searchWorkspace(
+            req.query.name
         );
 
         return res

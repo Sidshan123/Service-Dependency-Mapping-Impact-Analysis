@@ -32,6 +32,18 @@ require(
 );
 
 
+const workspaceMemberRoutes =
+require(
+    "./routes/workspace-member.routes"
+);
+
+
+const inviteRoutes =
+require(
+    "./routes/invite.routes"
+);
+
+
 //----------------------------------
 // AUTH ROUTES
 //----------------------------------
@@ -84,6 +96,27 @@ app.use(
 app.use(
     "/api/dependencies",
     dependencyRoutes
+);
+
+
+//----------------------------------
+// WORKSPACE MEMBER ROUTES
+//----------------------------------
+
+
+app.use(
+    "/api/workspace-members",
+    workspaceMemberRoutes
+);
+
+
+//----------------------------------        
+//routes to display the code
+//----------------------------------
+
+app.use(
+    "/api/invites",
+    inviteRoutes
 );
 
 

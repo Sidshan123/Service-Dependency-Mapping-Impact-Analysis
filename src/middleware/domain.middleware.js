@@ -174,7 +174,7 @@ async function canUpdateDomainName(
             .json({
 
                 message:
-                "Only domain lead can update domain name"
+                "Only domain lead can update domain name or invite developers to the domain"
 
             });
 

@@ -1,14 +1,56 @@
 const prisma =
 require("../config/prisma");
 
+async function generateUniqueInviteCode(
+    tx
+){
+
+    while(true){
+
+        const inviteCode =
+
+            Math.floor(
+
+                100000 +
+                Math.random() * 900000
+
+            ).toString();
+
+        const existingCode =
+        await tx.workspace_invites
+        .findUnique({
+
+            where:{
+
+                invite_code:
+                inviteCode
+
+            }
+
+        });
+
+        if(!existingCode){
+
+            return inviteCode;
+
+        }
+
+    }
+
+}
+
+
+
 async function createDomain(
     data,
     userId
 ){
 
     const {
+
         workspace_id,
         domain_name
+
     } = data;
 
     if(
@@ -28,9 +70,8 @@ async function createDomain(
         where:{
 
             workspace_id:
-            workspace_id,
+            Number(workspace_id),
 
-            domain_name:
             domain_name
 
         }
@@ -45,54 +86,107 @@ async function createDomain(
 
     }
 
-    const domain =
-    await prisma.domains.create({
+    return await prisma.$transaction(
 
-        data:{
+        async(tx)=>{
 
-            workspace_id:
-            workspace_id,
+            //----------------------------------
+            // CREATE DOMAIN
+            //----------------------------------
 
-            domain_name:
-            domain_name,
+            const domain =
+            await tx.domains.create({
 
-            lead_user_id:
-            userId
+                data:{
+
+                    workspace_id:
+                    Number(workspace_id),
+
+                    domain_name,
+
+                    lead_user_id:
+                    userId
+
+                }
+
+            });
+
+            //----------------------------------
+            // ADD DOMAIN LEAD
+            //----------------------------------
+
+            await tx.workspace_members
+            .create({
+
+                data:{
+
+                    workspace_id:
+                    Number(workspace_id),
+
+                    domain_id:
+                    domain.id,
+
+                    user_id:
+                    userId,
+
+                    role:
+                    "LEAD"
+
+                }
+
+            });
+
+            //----------------------------------
+            // GENERATE DEVELOPER
+            // INVITE CODE
+            //----------------------------------
+
+            const developerInviteCode =
+            await generateUniqueInviteCode(
+                tx
+            );
+
+            //----------------------------------
+            // STORE DEVELOPER
+            // INVITE CODE
+            //----------------------------------
+
+            await tx.workspace_invites
+            .create({
+
+                data:{
+
+                    workspace_id:
+                    Number(workspace_id),
+
+                    domain_id:
+                    domain.id,
+
+                    role:
+                    "DEVELOPER",
+
+                    invite_code:
+                    developerInviteCode
+
+                }
+
+            });
+
+            return {
+
+                message:
+                "Domain created successfully",
+
+                developer_invite_code:
+                developerInviteCode
+
+            };
 
         }
 
-    });
-
-    await prisma.workspace_members.create({
-
-        data:{
-
-            workspace_id:
-            workspace_id,
-
-            domain_id:
-            domain.id,
-
-            user_id:
-            userId,
-
-            role:
-            "LEAD"
-
-        }
-
-    });
-
-    return {
-
-        message:
-        "Domain created successfully"
-
-    };
+    );
 
 }
-
-
 
 
 
