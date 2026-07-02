@@ -7,26 +7,39 @@ const router =
 express.Router();
 
 const authenticate =
-require("../middleware/auth.middleware");
+require(
+    "../middleware/auth.middleware"
+);
 
 const {
+
     validateDeveloperInviteCode
+
 } = require(
-    "../middleware/domain-invite.middleware"
+
+    "../middleware/developer-invite.middleware"
+
 );
 
 const workspaceMemberController =
 require(
+
     "../controllers/workspace-member.controller"
+
 );
 
 
 router.post(
-    "/join-as-developer",
+
+    "/join-developer",
+
     authenticate,
+
     validateDeveloperInviteCode,
+
     workspaceMemberController
     .joinAsDeveloper
+
 );
 
 

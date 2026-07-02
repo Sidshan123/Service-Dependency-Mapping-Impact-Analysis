@@ -8,53 +8,54 @@ datasource db {
 }
 
 model dependencies {
-  id                                                BigInt         @id @default(autoincrement())
-  workspace_id                                      BigInt
-  source_service_id                                 BigInt
-  target_service_id                                 BigInt
-  created_at                                        DateTime?      @default(now()) @db.Timestamp(0)
+  id                BigInt    @id @default(autoincrement())
+  workspace_id      BigInt
+  source_service_id BigInt
+  target_service_id BigInt
+  created_at        DateTime? @default(now()) @db.Timestamp(0)
 
-  services_dependencies_source_service_idToservices services   @relation("dependencies_source_service_idToservices", fields: [source_service_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_dep_source")
+  services_dependencies_source_service_idToservices services @relation("dependencies_source_service_idToservices", fields: [source_service_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_dep_source")
 
-  services_dependencies_target_service_idToservices services   @relation("dependencies_target_service_idToservices", fields: [target_service_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_dep_target")
+  services_dependencies_target_service_idToservices services @relation("dependencies_target_service_idToservices", fields: [target_service_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_dep_target")
 
   workspaces workspaces @relation(fields: [workspace_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_dep_workspace")
 
   @@unique([workspace_id, source_service_id, target_service_id], map: "unique_dependency")
-
   @@index([target_service_id], map: "fk_dep_target")
   @@index([source_service_id], map: "idx_source_service")
 }
 
 model domains {
-  id                BigInt              @id @default(autoincrement())
-  domain_name       String              @db.VarChar(150)
-  workspace_id      BigInt
-  lead_user_id      BigInt
-  created_at        DateTime?           @default(now()) @db.Timestamp(0)
-  users             users               @relation(fields: [lead_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_domain_lead")
-  workspaces        workspaces          @relation(fields: [workspace_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_domain_workspace")
+  id           BigInt    @id @default(autoincrement())
+  domain_name  String    @db.VarChar(150)
+  workspace_id BigInt
+  lead_user_id BigInt
+  created_at   DateTime? @default(now()) @db.Timestamp(0)
+
+  users      users      @relation(fields: [lead_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_domain_lead")
+  workspaces workspaces @relation(fields: [workspace_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_domain_workspace")
+
   services          services[]
   workspace_members workspace_members[]
+  workspace_invites workspace_invites[]
 
   @@index([lead_user_id], map: "fk_domain_lead")
   @@index([workspace_id], map: "fk_domain_workspace")
 }
 
-
-
 model services {
-  id                                                    BigInt           @id @default(autoincrement())
-  workspace_id                                          BigInt
-  domain_id                                             BigInt
-  service_name                                          String           @db.VarChar(150)
-  status                                                String           @db.VarChar(50)
-  created_at                                            DateTime?        @default(now()) @db.Timestamp(0)
-  dependencies_dependencies_source_service_idToservices dependencies[]   @relation("dependencies_source_service_idToservices")
-  dependencies_dependencies_target_service_idToservices dependencies[]   @relation("dependencies_target_service_idToservices")
-  impact_reports                                        impact_reports[]
-  domains                                               domains          @relation(fields: [domain_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_service_domain")
-  workspaces                                            workspaces       @relation(fields: [workspace_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_service_workspace")
+  id           BigInt    @id @default(autoincrement())
+  workspace_id BigInt
+  domain_id    BigInt
+  service_name String    @db.VarChar(150)
+  status       String    @db.VarChar(50)
+  created_at   DateTime? @default(now()) @db.Timestamp(0)
+
+  dependencies_dependencies_source_service_idToservices dependencies[] @relation("dependencies_source_service_idToservices")
+  dependencies_dependencies_target_service_idToservices dependencies[] @relation("dependencies_target_service_idToservices")
+
+  domains    domains    @relation(fields: [domain_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_service_domain")
+  workspaces workspaces @relation(fields: [workspace_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_service_workspace")
 
   @@index([domain_id], map: "fk_service_domain")
   @@index([workspace_id], map: "fk_service_workspace")
@@ -87,48 +88,34 @@ model workspace_members {
 }
 
 model workspaces {
-  id                BigInt                    @id @default(autoincrement())
-  workspace_name    String                    @db.VarChar(150) 
-  owner_user_id     BigInt
-  workspace_type    workspaces_workspace_type
-  created_at        DateTime?                 @default(now()) @db.Timestamp(0)
+  id             BigInt                    @id @default(autoincrement())
+  workspace_name String                    @db.VarChar(150)
+  owner_user_id  BigInt
+  workspace_type workspaces_workspace_type
+  created_at     DateTime?                 @default(now()) @db.Timestamp(0)
+
   dependencies      dependencies[]
   domains           domains[]
-  impact_reports    impact_reports[]
   services          services[]
   workspace_members workspace_members[]
-  users             users                     @relation(fields: [owner_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_workspace_owner")
+  workspace_invites workspace_invites[]
+
+  users users @relation(fields: [owner_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_workspace_owner")
 
   @@index([owner_user_id], map: "fk_workspace_owner")
 }
 
-
 model workspace_invites {
+  id           BigInt  @id @default(autoincrement())
+  workspace_id BigInt
+  domain_id    BigInt?
 
-    id           Int      @id @default(autoincrement())
+  role        String
+  invite_code String @unique
 
-    workspace_id Int
-
-    domain_id    Int?
-
-    role         String
-
-    invite_code  String   @unique
-
-    workspaces   workspaces
-                 @relation(
-                    fields:[workspace_id],
-                    references:[id]
-                 )
-
-    domains      domains?
-                 @relation(
-                    fields:[domain_id],
-                    references:[id]
-                 )
+  workspaces workspaces @relation(fields: [workspace_id], references: [id])
+  domains    domains?   @relation(fields: [domain_id], references: [id])
 }
-
-
 
 enum workspace_members_role {
   LEAD

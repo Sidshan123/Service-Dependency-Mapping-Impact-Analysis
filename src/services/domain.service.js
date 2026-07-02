@@ -40,18 +40,23 @@ async function generateUniqueInviteCode(
 }
 
 
-
 async function createDomain(
     data,
     userId
 ){
 
-    const {
+    let {
 
         workspace_id,
         domain_name
 
     } = data;
+
+    workspace_id =
+    Number(workspace_id);
+
+    userId =
+    Number(userId);
 
     if(
         !workspace_id ||
@@ -69,8 +74,7 @@ async function createDomain(
 
         where:{
 
-            workspace_id:
-            Number(workspace_id),
+            workspace_id,
 
             domain_name
 
@@ -99,8 +103,7 @@ async function createDomain(
 
                 data:{
 
-                    workspace_id:
-                    Number(workspace_id),
+                    workspace_id,
 
                     domain_name,
 
@@ -120,8 +123,7 @@ async function createDomain(
 
                 data:{
 
-                    workspace_id:
-                    Number(workspace_id),
+                    workspace_id,
 
                     domain_id:
                     domain.id,
@@ -156,8 +158,7 @@ async function createDomain(
 
                 data:{
 
-                    workspace_id:
-                    Number(workspace_id),
+                    workspace_id,
 
                     domain_id:
                     domain.id,
@@ -187,7 +188,6 @@ async function createDomain(
     );
 
 }
-
 
 
 
@@ -320,32 +320,44 @@ async function deleteDomain(
 
     await prisma.$transaction(
 
-        async(tx)=>{
+    async(tx)=>{
 
-            await tx.workspace_members
-            .deleteMany({
+        await tx.workspace_members
+        .deleteMany({
 
-                where:{
+            where:{
 
-                    domain_id:
-                    Number(domainId)
+                domain_id:
+                Number(domainId)
 
-                }
+            }
 
-            });
+        });
 
-            await tx.domains
-            .delete({
+        await tx.workspace_invites
+        .deleteMany({
 
-                where:{
-                    id:Number(domainId)
-                }
+            where:{
 
-            });
+                domain_id:
+                Number(domainId)
 
-        }
+            }
 
-    );
+        });
+
+        await tx.domains
+        .delete({
+
+            where:{
+                id:Number(domainId)
+            }
+
+        });
+
+    }
+
+);
 
     return {
 
@@ -389,14 +401,24 @@ async function getDomains(
 
     });
 
-    return domains;
+    return domains.map(
+
+        domain => ({
+
+            id:
+            Number(domain.id),
+
+            domain_name:
+            domain.domain_name,
+
+            lead_user_id:
+            Number(domain.lead_user_id)
+
+        })
+
+    );
 
 }
-
-
-
-    
-
 
 
 

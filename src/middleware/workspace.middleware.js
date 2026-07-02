@@ -72,8 +72,9 @@ async function canTransferWorkspaceOwnership(
 
   }
 
-const prisma =
-require("../config/prisma");
+
+
+  
 
 async function canModifyWorkspace(
     req,

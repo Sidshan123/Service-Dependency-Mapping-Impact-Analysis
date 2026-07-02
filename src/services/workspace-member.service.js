@@ -1,71 +1,28 @@
-// services/workspace-member.service.js
-
 const prisma =
 require("../config/prisma");
 
 
 async function joinAsDeveloper(
     data,
-    userId
+    userId,
+    invite
 ){
 
     const {
-
-        workspace_id,
-        invite_code
-
+        workspace_id
     } = data;
 
-    const invite =
-    await prisma.workspace_invites
-    .findFirst({
-
-        where:{
-
-            workspace_id:
-            Number(
-                workspace_id
-            ),
-
-            invite_code
-
-        }
-
-    });
-
-    if(!invite){
-
-        throw new Error(
-            "Invalid invite code"
-        );
-
-    }
-
     //----------------------------------
-    // Extract domain name
+    // FETCH DOMAIN
     //----------------------------------
-
-    const domainName =
-
-        invite.role.replace(
-
-            "-DEVELOPER",
-            ""
-
-        );
 
     const domain =
-    await prisma.domains.findFirst({
+    await prisma.domains.findUnique({
 
         where:{
 
-            workspace_id:
-            Number(
-                workspace_id
-            ),
-
-            domain_name:
-            domainName
+            id:
+            invite.domain_id
 
         }
 
@@ -80,7 +37,7 @@ async function joinAsDeveloper(
     }
 
     //----------------------------------
-    // Already a member?
+    // ALREADY A MEMBER?
     //----------------------------------
 
     const existingMember =
@@ -95,7 +52,7 @@ async function joinAsDeveloper(
             ),
 
             domain_id:
-            domain.id,
+            invite.domain_id,
 
             user_id:
             userId
@@ -113,7 +70,7 @@ async function joinAsDeveloper(
     }
 
     //----------------------------------
-    // Add developer
+    // ADD DEVELOPER
     //----------------------------------
 
     await prisma.workspace_members
@@ -127,7 +84,7 @@ async function joinAsDeveloper(
             ),
 
             domain_id:
-            domain.id,
+            invite.domain_id,
 
             user_id:
             userId,
@@ -143,12 +100,11 @@ async function joinAsDeveloper(
 
         message:
 
-        `Joined ${domainName} as developer successfully`
+        `Joined ${domain.domain_name} as developer successfully`
 
     };
 
 }
-
 
 module.exports = {
     joinAsDeveloper

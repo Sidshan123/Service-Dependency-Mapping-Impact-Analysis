@@ -6,34 +6,33 @@ require(
 );
 
 
-exports.developerExit =
-async(req,res)=>{
 
-    try{
+
+
+exports.getExitOptions =
+async (req, res) => {
+
+    try {
 
         const result =
         await workspaceLeaveService
-        .developerExit(
+        .getExitOptions(
 
-            req.params.id,
+            req.params.workspaceId,
+
             req.user.userId
 
         );
 
-        return res
-        .status(200)
+        res.status(200)
         .json(result);
 
     }
-    catch(error){
+    catch (error) {
 
-        return res
-        .status(400)
+        res.status(400)
         .json({
-
-            message:
-            error.message
-
+            message: error.message
         });
 
     }
@@ -41,77 +40,41 @@ async(req,res)=>{
 };
 
 
+exports.exitWorkspace =
+async (req, res) => {
 
-exports.getDomainLeadExitOptions =
-async(req,res)=>{
-
-    try{
-
-        const result =
-        await workspaceLeaveService
-        .getDomainLeadExitOptions(
-
-            req.params.id,
-            req.user.userId
-
-        );
-
-        return res
-        .status(200)
-        .json(result);
-
-    }
-    catch(error){
-
-        return res
-        .status(400)
-        .json({
-
-            message:
-            error.message
-
-        });
-
-    }
-
-};
-
-
-
-exports.domainLeadExit =
-async(req,res)=>{
-
-    try{
+    try {
 
         const result =
         await workspaceLeaveService
-        .domainLeadExit(
+        .exitWorkspace(
 
-            req.params.id,
+            req.params.workspaceId,
+
             req.user.userId,
+
             req.body
 
         );
 
-        return res
-        .status(200)
+        res.status(200)
         .json(result);
 
     }
-    catch(error){
+    catch (error) {
 
-        return res
-        .status(400)
+        res.status(400)
         .json({
-
-            message:
-            error.message
-
+            message: error.message
         });
 
     }
 
 };
+
+
+
+
 
 
 
@@ -184,76 +147,7 @@ async(req,res)=>{
 
 
 
-exports.getOwnerExitOptions =
-async(req,res)=>{
 
-    try{
-
-        const result =
-        await workspaceLeaveService
-        .getOwnerExitOptions(
-
-            req.params.id,
-            req.user.userId
-
-        );
-
-        return res
-        .status(200)
-        .json(result);
-
-    }
-    catch(error){
-
-        return res
-        .status(400)
-        .json({
-
-            message:
-            error.message
-
-        });
-
-    }
-
-};
-
-
-
-exports.ownerExit =
-async(req,res)=>{
-
-    try{
-
-        const result =
-        await workspaceLeaveService
-        .ownerExit(
-
-            req.params.id,
-            req.user.userId,
-            req.body
-
-        );
-
-        return res
-        .status(200)
-        .json(result);
-
-    }
-    catch(error){
-
-        return res
-        .status(400)
-        .json({
-
-            message:
-            error.message
-
-        });
-
-    }
-
-};
 
 
 
@@ -292,26 +186,29 @@ async(req,res)=>{
 
 
 
-exports.getDomainDevelopers =
-async(req,res)=>{
 
-    try{
+exports.getMyDevelopers =
+async (req, res) => {
+
+    try {
 
         const result =
         await workspaceLeaveService
-        .getDomainDevelopers(
-            req.params.id
+        .getMyDevelopers(
+
+            req.query.workspaceId,
+
+            req.user.userId
+
         );
 
-        return res
-        .status(200)
+        res.status(200)
         .json(result);
 
     }
-    catch(error){
+    catch (error) {
 
-        return res
-        .status(400)
+        res.status(400)
         .json({
 
             message:
@@ -322,6 +219,8 @@ async(req,res)=>{
     }
 
 };
+
+
 
 
 

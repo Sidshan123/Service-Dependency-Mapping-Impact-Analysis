@@ -5,7 +5,6 @@ require(
     "../services/workspace-member.service"
 );
 
-
 exports.joinAsDeveloper =
 async(req,res)=>{
 
@@ -16,19 +15,20 @@ async(req,res)=>{
         .joinAsDeveloper(
 
             req.body,
-            req.user.userId
+
+            req.user.userId,
+
+            req.invite
 
         );
 
-        return res
-        .status(201)
+        res.status(201)
         .json(result);
 
     }
     catch(error){
 
-        return res
-        .status(400)
+        res.status(400)
         .json({
 
             message:

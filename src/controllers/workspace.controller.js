@@ -134,6 +134,44 @@ async(req,res)=>{
 
 
 
+exports.updatePersonalWorkspaceName =
+async(req,res)=>{
+
+    try{
+
+        const result =
+        await workspaceService
+        .updatePersonalWorkspaceName(
+
+            req.params.id,
+            req.body,
+            req.user.userId
+
+        );
+
+        return res
+        .status(200)
+        .json(result);
+
+    }
+    catch(error){
+
+        return res
+        .status(400)
+        .json({
+
+            message:
+            error.message
+
+        });
+
+    }
+
+};
+
+
+
+
 exports.deletePersonalWorkspace =
 async(req,res)=>{
 

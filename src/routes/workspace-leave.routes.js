@@ -7,54 +7,41 @@ express.Router();
 const authenticate =
 require("../middleware/auth.middleware");
 
-const {
-    canModifyWorkspace,
-    canOwnerManageDomainLead
-} = require(
-    "../middleware/workspace.middleware"
-);
-
 const workspaceLeaveController =
-require(
-    "../controllers/workspace-leave.controller"
-);
+require("../controllers/workspace-leave.controller");
 
 
-const {canUpdateDomainName} = require(
-    "../middleware/domain.middleware"
-);
+const{canOwnerManageDomainLead} =
+require("../middleware/workspace.middleware");
 
 
-// Developer exit
-
-router.delete(
-    "/:id/developer-exit",
-    authenticate,
-    workspaceLeaveController
-    .developerExit
-);
+const{canModifyWorkspace} =
+require("../middleware/workspace.middleware");
 
 
-// Domain lead self exit options
 
-//:id---->workspace id
+const{canUpdateDomainName} =
+require("../middleware/domain.middleware");
 
+
+//Exit options
 router.get(
-    "/:id/domain-lead-exit-options",
+    "/:workspaceId/exit-options",
     authenticate,
     workspaceLeaveController
-    .getDomainLeadExitOptions
+    .getExitOptions
 );
 
-
-// Domain lead self exit
+//Exit workspace
 
 router.post(
-    "/:id/domain-lead-exit",
+    "/:workspaceId/exit",
     authenticate,
     workspaceLeaveController
-    .domainLeadExit
+    .exitWorkspace
 );
+
+
 
 
 // Owner changes lead options
@@ -81,27 +68,6 @@ router.post(
 
 
 
-// Owner exit options
-
-router.get(
-    "/:id/owner-exit-options",
-    authenticate,
-    canModifyWorkspace,
-    workspaceLeaveController
-    .getOwnerExitOptions
-);
-
-
-// Owner exit
-
-router.post(
-    "/:id/owner-exit",
-    authenticate,
-    canModifyWorkspace,
-    workspaceLeaveController
-    .ownerExit
-);
-
 
 //----------------------------------
 //retreiving the domain leads of a workspace
@@ -127,7 +93,7 @@ router.get(
     authenticate,
     canUpdateDomainName,
     workspaceLeaveController
-    .getDomainDevelopers
+    .getMyDevelopers
 );
 
 

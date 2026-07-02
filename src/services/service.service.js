@@ -72,7 +72,8 @@ async function createService(
             domain_id:
             Number(domain_id),
 
-            service_name
+            service_name,
+            status:"ACTIVE"
 
         }
 
@@ -209,7 +210,7 @@ async function deleteService(
                 },
 
                 {
-                    destination_service_id:
+                    target_service_id:
                     Number(serviceId)
                 }
 
@@ -278,7 +279,22 @@ async function getWorkspaceServices(
 
     });
 
-    return services;
+    return services.map(
+
+        service => ({
+
+            id:
+            Number(service.id),
+
+            service_name:
+            service.service_name,
+
+            domain_id:
+            Number(service.domain_id)
+
+        })
+
+    );
 
 }
 

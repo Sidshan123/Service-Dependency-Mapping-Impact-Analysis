@@ -13,6 +13,12 @@ const {
     "../middleware/dependency.middleware"
 );
 
+const {
+    canDeleteDependency
+} = require(
+    "../middleware/dependency.middleware"
+);
+
 const dependencyController =
 require(
     "../controllers/dependency.controller"
@@ -32,7 +38,7 @@ router.post(
 router.delete(
     "/:id",
     authenticate,
-    canManageDependency,
+    canDeleteDependency,
     dependencyController.deleteDependency
 );
 

@@ -33,8 +33,7 @@ const {
 router.post(
     "/",
     authMiddleware,
-    validateLeadInviteCode,
-    domainController.createDomain
+    workspaceController.createWorkspace
 );
 
 //workspaces retrieval route by userID

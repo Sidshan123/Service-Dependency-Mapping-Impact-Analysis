@@ -45,7 +45,10 @@ async function validateDeveloperInviteCode(
                     workspace_id
                 ),
 
-                invite_code
+                invite_code,
+
+                role:
+                "DEVELOPER"
 
             }
 
@@ -64,26 +67,20 @@ async function validateDeveloperInviteCode(
 
         }
 
-        if(
+        //----------------------------------
+        // Store only necessary fields
+        //----------------------------------
 
-            !invite.role.endsWith(
-                "-DEVELOPER"
+        req.invite = {
+
+            domain_id:
+            Number(
+                invite.domain_id
             )
 
-        ){
+        };
 
-            return res
-            .status(403)
-            .json({
-
-                message:
-                "This invite code is not for developers"
-
-            });
-
-        }
-
-        return next();
+        next();
 
     }
     catch(error){

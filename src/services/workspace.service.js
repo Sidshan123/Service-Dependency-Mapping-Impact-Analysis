@@ -249,6 +249,21 @@ async function getWorkspaces(
 
     });
 
+    const ownedTeamWorkspaces =
+    await prisma.workspaces.findMany({
+
+        where:{
+
+            owner_user_id:
+            userId,
+
+            workspace_type:
+            "TEAM"
+
+        }
+
+    });
+
     const memberships =
     await prisma.workspace_members.findMany({
 
@@ -262,30 +277,65 @@ async function getWorkspaces(
 
     });
 
-    const teamWorkspaces =
+    const joinedTeamWorkspaces =
     memberships
     .map(
-
-        member =>
-        member.workspaces
-
+        member => member.workspaces
     )
     .filter(
-
         workspace =>
-
         workspace.workspace_type ===
         "TEAM"
-
     );
+
+    const teamWorkspaceMap =
+    new Map();
+
+    for(
+        const workspace
+        of [
+            ...ownedTeamWorkspaces,
+            ...joinedTeamWorkspaces
+        ]
+    ){
+
+        teamWorkspaceMap.set(
+            Number(workspace.id),
+            {
+                ...workspace,
+                id: Number(workspace.id),
+                owner_user_id:
+                Number(workspace.owner_user_id)
+            }
+        );
+
+    }
 
     return {
 
         PERSONAL:
-        personalWorkspaces,
+        personalWorkspaces.map(
+
+            workspace => ({
+
+                ...workspace,
+
+                id:
+                Number(workspace.id),
+
+                owner_user_id:
+                Number(
+                    workspace.owner_user_id
+                )
+
+            })
+
+        ),
 
         TEAM:
-        teamWorkspaces
+        Array.from(
+            teamWorkspaceMap.values()
+        )
 
     };
 
@@ -787,13 +837,13 @@ async function cloneWorkspaceToPersonal(
 
             return {
 
-                message:
-                "Workspace cloned successfully",
+            message:
+            "Workspace cloned successfully",
 
-                workspace_id:
-                newWorkspace.id
+            workspace_id:
+            Number(newWorkspace.id)
 
-            };
+        };
 
         }
 
@@ -1202,6 +1252,22 @@ async function generateImpactReport(
     });
 
     //--------------------------------------------------
+    // GET TOTAL DOMAINS
+    //--------------------------------------------------
+
+    const totalDomains =
+    await prisma.domains.count({
+
+        where:{
+
+            workspace_id:
+            workspaceId
+
+        }
+
+    });
+
+    //--------------------------------------------------
     // GET ALL DEPENDENCIES
     //--------------------------------------------------
 
@@ -1377,6 +1443,28 @@ async function generateImpactReport(
 
     );
 
+    const serviceImpactPercentage =
+    Math.round(
+
+        (
+            affectedServicesCount
+            /
+            totalServices
+        ) * 100
+
+    );
+
+    const domainImpactPercentage =
+    Math.round(
+
+        (
+            affectedDomainsCount
+            /
+            totalDomains
+        ) * 100
+
+    );
+
     //--------------------------------------------------
     // RETURN REPORT
     //--------------------------------------------------
@@ -1389,11 +1477,23 @@ async function generateImpactReport(
         root_service_name:
         rootService.service_name,
 
+        total_services:
+        totalServices,
+
+        total_domains:
+        totalDomains,
+
         affected_services_count:
         affectedServicesCount,
 
         affected_domains_count:
         affectedDomainsCount,
+
+        service_impact_percentage:
+        serviceImpactPercentage,
+
+        domain_impact_percentage:
+        domainImpactPercentage,
 
         severity_score:
         severityScore,
@@ -1407,7 +1507,7 @@ async function generateImpactReport(
             serviceId => ({
 
                 id:
-                serviceId,
+                Number(serviceId),
 
                 service_name:
                 serviceNameMap.get(
@@ -1421,9 +1521,6 @@ async function generateImpactReport(
     };
 
 }
-
-
-
 
 
 
@@ -1477,7 +1574,18 @@ async function searchWorkspace(
 
     }
 
-    return workspace;
+    return {
+
+        id:
+        Number(workspace.id),
+
+        workspace_name:
+        workspace.workspace_name,
+
+        workspace_type:
+        workspace.workspace_type
+
+    };
 
 }
 

@@ -5,13 +5,22 @@ async function createDependencyService(
     data
 ){
 
-    const {
+    let {
 
         workspace_id,
         source_service_id,
         target_service_id
 
     } = data;
+
+    workspace_id =
+    Number(workspace_id);
+
+    source_service_id =
+    Number(source_service_id);
+
+    target_service_id =
+    Number(target_service_id);
 
     if(
 
@@ -28,12 +37,8 @@ async function createDependencyService(
     }
 
     if(
-        Number(
-            source_service_id
-        ) ===
-        Number(
-            target_service_id
-        )
+        source_service_id ===
+        target_service_id
     ){
 
         throw new Error(
@@ -46,9 +51,7 @@ async function createDependencyService(
     await prisma.services.findUnique({
 
         where:{
-            id:Number(
-                source_service_id
-            )
+            id:source_service_id
         }
 
     });
@@ -57,9 +60,7 @@ async function createDependencyService(
     await prisma.services.findUnique({
 
         where:{
-            id:Number(
-                target_service_id
-            )
+            id:target_service_id
         }
 
     });
@@ -75,19 +76,34 @@ async function createDependencyService(
 
     }
 
+    if(
+
+        Number(sourceService.workspace_id) !==
+        workspace_id
+
+        ||
+
+        Number(targetService.workspace_id) !==
+        workspace_id
+
+    ){
+
+        throw new Error(
+            "Services do not belong to this workspace"
+        );
+
+    }
+
     const existingDependency =
     await prisma.dependencies.findFirst({
 
         where:{
 
-            workspace_id:
-            Number(workspace_id),
+            workspace_id,
 
-            source_service_id:
-            Number(source_service_id),
+            source_service_id,
 
-            target_service_id:
-            Number(target_service_id)
+            target_service_id
 
         }
 
@@ -105,14 +121,11 @@ async function createDependencyService(
 
         data:{
 
-            workspace_id:
-            Number(workspace_id),
+            workspace_id,
 
-            source_service_id:
-            Number(source_service_id),
+            source_service_id,
 
-            target_service_id:
-            Number(target_service_id)
+            target_service_id
 
         }
 
