@@ -37,6 +37,8 @@ async function canViewWorkspaceGraph(
 
         }
 
+        const roles = [];
+
         //----------------------------------
         // OWNER
         //----------------------------------
@@ -47,17 +49,18 @@ async function canViewWorkspaceGraph(
             ) === userId
         ){
 
-            return next();
+            roles.push(
+                "OWNER"
+            );
 
         }
 
         //----------------------------------
-        // MEMBER
+        // LEAD / DEVELOPER
         //----------------------------------
 
-        const member =
-        await prisma.workspace_members
-        .findFirst({
+        const members =
+        await prisma.workspace_members.findMany({
 
             where:{
 
@@ -67,24 +70,57 @@ async function canViewWorkspaceGraph(
                 user_id:
                 userId
 
+            },
+
+            select:{
+                role:true
             }
 
         });
 
-        if(member){
+        members.forEach(
 
-            return next();
+            member => {
+
+                if(
+                    !roles.includes(
+                        member.role
+                    )
+                ){
+
+                    roles.push(
+                        member.role
+                    );
+
+                }
+
+            }
+
+        );
+
+        //----------------------------------
+        // NOT A MEMBER
+        //----------------------------------
+
+        if(
+            roles.length === 0
+        ){
+
+            return res
+            .status(403)
+            .json({
+
+                message:
+                "Only workspace members can view the graph"
+
+            });
 
         }
 
-        return res
-        .status(403)
-        .json({
+        req.workspaceRoles =
+        roles;
 
-            message:
-            "Only workspace members can view the graph"
-
-        });
+        next();
 
     }
     catch(error){

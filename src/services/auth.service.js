@@ -119,6 +119,7 @@ async function login(data) {
     return {
         message: "Login successful",
         token
+        
     };
 
 }

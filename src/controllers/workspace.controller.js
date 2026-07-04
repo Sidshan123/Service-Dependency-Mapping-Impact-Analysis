@@ -203,27 +203,33 @@ async(req,res)=>{
 
 };
 
-
 exports.getWorkspaceGraph =
-async(req,res)=>{
+async function getWorkspaceGraph(
+    req,
+    res
+){
 
     try{
 
-        const result =
+        const graph =
         await workspaceService
         .getWorkspaceGraph(
-            req.params.id
+
+            req.params.id,
+
+            req.workspaceRoles
+
         );
 
         return res
         .status(200)
-        .json(result);
+        .json(graph);
 
     }
     catch(error){
 
         return res
-        .status(400)
+        .status(500)
         .json({
 
             message:
@@ -233,7 +239,7 @@ async(req,res)=>{
 
     }
 
-};
+}
 
 
 

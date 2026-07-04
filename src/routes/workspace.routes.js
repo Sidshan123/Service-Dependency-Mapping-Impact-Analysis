@@ -84,25 +84,6 @@ router.delete(
     workspaceController.deleteWorkspace
 );
 
-//personal workspace name modification route
-
-
-router.patch(
-    "/:id/personal-name",
-    authMiddleware,
-    canModifyWorkspace,
-    workspaceController.updatePersonalWorkspaceName
-);
-
-//personal workspace deletion route
-
-
-router.delete(
-    "/:id/personal",
-    authMiddleware,
-    canModifyWorkspace,
-    workspaceController.deletePersonalWorkspace
-);
 
 
 //personal workspace cloning route

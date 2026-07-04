@@ -1,5 +1,8 @@
 import { useState } from "react";
 
+import { useNavigate }
+from "react-router-dom";
+
 import {
 
     MoreVertical,
@@ -21,6 +24,9 @@ function WorkspaceCard({
     onDelete
 
 }) {
+
+    const navigate =
+    useNavigate();
 
     const [showMenu, setShowMenu] =
     useState(false);
@@ -70,6 +76,17 @@ function WorkspaceCard({
     return (
 
         <div
+
+        onClick={() =>
+
+            navigate(
+
+                `/workspace/${workspace.id}`
+
+            )
+
+        }
+
         className={`
         group
         relative
@@ -267,7 +284,9 @@ function WorkspaceCard({
 
                                             <button
 
-                                                onClick={() => {
+                                                onClick={(event) => {
+
+                                                    event.stopPropagation();
 
                                                     setShowMenu(
                                                         false
@@ -305,7 +324,9 @@ function WorkspaceCard({
 
                                             <button
 
-                                                onClick={() => {
+                                                onClick={(event) => {
+
+                                                    event.stopPropagation();
 
                                                     setShowMenu(
                                                         false

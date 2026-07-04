@@ -440,190 +440,231 @@ async function deleteWorkspace(
 
     }
 
+
+    //--------------------------------------------------
+    // TEAM WORKSPACE
+    //--------------------------------------------------
+
     if(
-        workspace.workspace_type !==
+
+        workspace.workspace_type ===
         "TEAM"
+
     ){
 
-        throw new Error(
-            "Only TEAM workspaces can be deleted"
-        );
+        const domainExists =
+        await prisma.domains.findFirst({
 
-    }
-
-    //----------------------------------
-    // CHECK IF DOMAINS EXIST
-    //----------------------------------
-
-    const domainExists =
-    await prisma.domains.findFirst({
-
-        where:{
-            workspace_id:
-            workspaceId
-        }
-
-    });
-
-    if(domainExists){
-
-        throw new Error(
-            "Cannot delete workspace. Domains exist."
-        );
-
-    }
-
-    //----------------------------------
-    // DELETE WORKSPACE MEMBERS
-    //----------------------------------
-
-    await prisma.workspace_members.deleteMany({
-
-        where:{
-            workspace_id:
-            workspaceId
-        }
-
-    });
-
-    //----------------------------------
-    // DELETE WORKSPACE INVITES
-    //----------------------------------
-
-    await prisma.workspace_invites.deleteMany({
-
-        where:{
-            workspace_id:
-            workspaceId
-        }
-
-    });
-
-    //----------------------------------
-    // DELETE WORKSPACE
-    //----------------------------------
-
-    await prisma.workspaces.delete({
-
-        where:{
-            id:workspaceId
-        }
-
-    });
-
-    return {
-
-        message:
-        "Workspace deleted successfully"
-
-    };
-
-}
-
-
-
-
-async function updatePersonalWorkspaceName(
-    workspaceId,
-    data
-){
-
-    workspaceId =
-    Number(workspaceId);
-
-    const {
-        workspace_name
-    } = data;
-
-    if(!workspace_name){
-
-        throw new Error(
-            "Workspace name is required"
-        );
-
-    }
-
-    const workspace =
-    await prisma.workspaces.findUnique({
-
-        where:{
-            id:workspaceId
-        }
-
-    });
-
-    if(!workspace){
-
-        throw new Error(
-            "Workspace not found"
-        );
-
-    }
-
-    if(
-        workspace.workspace_type !==
-        "PERSONAL"
-    ){
-
-        throw new Error(
-            "Only PERSONAL workspaces can be updated here"
-        );
-
-    }
-
-    //----------------------------------
-    // PERSONAL UNIQUENESS CHECK
-    //----------------------------------
-
-    const existingWorkspace =
-    await prisma.workspaces.findFirst({
-
-        where:{
-
-            owner_user_id:
-            workspace.owner_user_id,
-
-            workspace_type:
-            "PERSONAL",
-
-            workspace_name,
-
-            NOT:{
-                id:workspaceId
+            where:{
+                workspace_id:
+                workspaceId
             }
 
+        });
+
+        if(domainExists){
+
+            throw new Error(
+                "Cannot delete workspace. Domains exist."
+            );
+
         }
 
-    });
 
-    if(existingWorkspace){
+        await prisma.$transaction(
 
-        throw new Error(
-            "Personal workspace name already exists"
+            async(tx)=>{
+
+                //----------------------------------
+                // DELETE MEMBERS
+                //----------------------------------
+
+                await tx.workspace_members
+                .deleteMany({
+
+                    where:{
+                        workspace_id:
+                        workspaceId
+                    }
+
+                });
+
+
+                //----------------------------------
+                // DELETE INVITES
+                //----------------------------------
+
+                await tx.workspace_invites
+                .deleteMany({
+
+                    where:{
+                        workspace_id:
+                        workspaceId
+                    }
+
+                });
+
+
+                //----------------------------------
+                // DELETE WORKSPACE
+                //----------------------------------
+
+                await tx.workspaces
+                .delete({
+
+                    where:{
+                        id:workspaceId
+                    }
+
+                });
+
+            }
+
         );
+
+        return {
+
+            message:
+            "Workspace deleted successfully"
+
+        };
 
     }
 
-    await prisma.workspaces.update({
 
-        where:{
-            id:workspaceId
-        },
+    //--------------------------------------------------
+    // PERSONAL WORKSPACE
+    //--------------------------------------------------
 
-        data:{
-            workspace_name
-        }
+    if(
 
-    });
+        workspace.workspace_type ===
+        "PERSONAL"
 
-    return {
+    ){
 
-        message:
-        "Personal workspace updated successfully"
+        await prisma.$transaction(
 
-    };
+            async(tx)=>{
+
+                //----------------------------------
+                // DELETE DEPENDENCIES
+                //----------------------------------
+
+                await tx.dependencies
+                .deleteMany({
+
+                    where:{
+
+                        workspace_id:
+                        workspaceId
+
+                    }
+
+                });
+
+
+                //----------------------------------
+                // DELETE SERVICES
+                //----------------------------------
+
+                await tx.services
+                .deleteMany({
+
+                    where:{
+
+                        workspace_id:
+                        workspaceId
+
+                    }
+
+                });
+
+
+                //----------------------------------
+                // DELETE DOMAINS
+                //----------------------------------
+
+                await tx.domains
+                .deleteMany({
+
+                    where:{
+
+                        workspace_id:
+                        workspaceId
+
+                    }
+
+                });
+
+
+                //----------------------------------
+                // DELETE MEMBERS
+                //----------------------------------
+
+                await tx.workspace_members
+                .deleteMany({
+
+                    where:{
+
+                        workspace_id:
+                        workspaceId
+
+                    }
+
+                });
+
+
+                //----------------------------------
+                // DELETE INVITES
+                //----------------------------------
+
+                await tx.workspace_invites
+                .deleteMany({
+
+                    where:{
+
+                        workspace_id:
+                        workspaceId
+
+                    }
+
+                });
+
+
+                //----------------------------------
+                // DELETE WORKSPACE
+                //----------------------------------
+
+                await tx.workspaces
+                .delete({
+
+                    where:{
+                        id:workspaceId
+                    }
+
+                });
+
+            }
+
+        );
+
+        return {
+
+            message:
+            "Personal workspace deleted successfully"
+
+        };
+
+    }
+
+
+    throw new Error(
+        "Invalid workspace type"
+    );
 
 }
+
 
 
 
@@ -973,6 +1014,7 @@ async function updateWorkspaceName(
         workspace_name
     } = data;
 
+
     if(!workspace_name){
 
         throw new Error(
@@ -980,6 +1022,11 @@ async function updateWorkspaceName(
         );
 
     }
+
+
+    //----------------------------------
+    // FETCH WORKSPACE
+    //----------------------------------
 
     const workspace =
     await prisma.workspaces.findUnique({
@@ -990,6 +1037,7 @@ async function updateWorkspaceName(
 
     });
 
+
     if(!workspace){
 
         throw new Error(
@@ -998,46 +1046,111 @@ async function updateWorkspaceName(
 
     }
 
+
+    let existingWorkspace;
+
+
+    //----------------------------------
+    // TEAM WORKSPACE
+    //----------------------------------
+
     if(
-        workspace.workspace_type !==
+
+        workspace.workspace_type ===
         "TEAM"
+
     ){
 
-        throw new Error(
-            "Only TEAM workspaces can be updated here"
-        );
+        existingWorkspace =
+        await prisma.workspaces.findFirst({
 
-    }
+            where:{
 
-    //----------------------------------
-    // GLOBAL CHECK FOR TEAM WORKSPACES
-    //----------------------------------
+                workspace_type:
+                "TEAM",
 
-    const existingWorkspace =
-    await prisma.workspaces.findFirst({
+                workspace_name,
 
-        where:{
+                NOT:{
+                    id:workspaceId
+                }
 
-            workspace_type:
-            "TEAM",
-
-            workspace_name,
-
-            NOT:{
-                id:workspaceId
             }
+
+        });
+
+
+        if(existingWorkspace){
+
+            throw new Error(
+                "Team workspace name already exists"
+            );
 
         }
 
-    });
+    }
 
-    if(existingWorkspace){
+
+    //----------------------------------
+    // PERSONAL WORKSPACE
+    //----------------------------------
+
+    else if(
+
+        workspace.workspace_type ===
+        "PERSONAL"
+
+    ){
+
+        existingWorkspace =
+        await prisma.workspaces.findFirst({
+
+            where:{
+
+                owner_user_id:
+                workspace.owner_user_id,
+
+                workspace_type:
+                "PERSONAL",
+
+                workspace_name,
+
+                NOT:{
+                    id:workspaceId
+                }
+
+            }
+
+        });
+
+
+        if(existingWorkspace){
+
+            throw new Error(
+                "Personal workspace name already exists"
+            );
+
+        }
+
+    }
+
+
+    //----------------------------------
+    // INVALID TYPE
+    //----------------------------------
+
+    else{
 
         throw new Error(
-            "Team workspace name already exists"
+            "Invalid workspace type"
         );
 
     }
+
+
+    //----------------------------------
+    // UPDATE NAME
+    //----------------------------------
 
     await prisma.workspaces.update({
 
@@ -1051,6 +1164,7 @@ async function updateWorkspaceName(
 
     });
 
+
     return {
 
         message:
@@ -1063,18 +1177,41 @@ async function updateWorkspaceName(
 
 
 
-async function deletePersonalWorkspace(
-    workspaceId
+
+
+
+
+
+async function getWorkspaceGraph(
+    workspaceId,
+    roles
 ){
+
+    workspaceId =
+    Number(workspaceId);
+
+
+    //----------------------------------
+    // GET WORKSPACE DETAILS
+    //----------------------------------
 
     const workspace =
     await prisma.workspaces.findUnique({
 
         where:{
-            id:Number(workspaceId)
+            id:workspaceId
+        },
+
+        select:{
+
+            id:true,
+
+            workspace_name:true
+
         }
 
     });
+
 
     if(!workspace){
 
@@ -1084,100 +1221,10 @@ async function deletePersonalWorkspace(
 
     }
 
-    if(
-        workspace.workspace_type !==
-        "PERSONAL"
-    ){
 
-        throw new Error(
-            "Not a personal workspace"
-        );
-
-    }
-
-    await prisma.$transaction(
-
-        async(tx)=>{
-
-            //----------------------------------
-            // DELETE DEPENDENCIES
-            //----------------------------------
-
-            await tx.dependencies.deleteMany({
-
-                where:{
-
-                    workspace_id:
-                    Number(workspaceId)
-
-                }
-
-            });
-
-            //----------------------------------
-            // DELETE SERVICES
-            //----------------------------------
-
-            await tx.services.deleteMany({
-
-                where:{
-
-                    workspace_id:
-                    Number(workspaceId)
-
-                }
-
-            });
-
-            //----------------------------------
-            // DELETE DOMAINS
-            //----------------------------------
-
-            await tx.domains.deleteMany({
-
-                where:{
-
-                    workspace_id:
-                    Number(workspaceId)
-
-                }
-
-            });
-
-            //----------------------------------
-            // DELETE WORKSPACE
-            //----------------------------------
-
-            await tx.workspaces.delete({
-
-                where:{
-                    id:Number(workspaceId)
-                }
-
-            });
-
-        }
-
-    );
-
-    return {
-
-        message:
-        "Personal workspace deleted successfully"
-
-    };
-
-}
-
-
-
-
-async function getWorkspaceGraph(
-    workspaceId
-){
-
-    workspaceId =
-    Number(workspaceId);
+    //----------------------------------
+    // GET SERVICES
+    //----------------------------------
 
     const services =
     await prisma.services.findMany({
@@ -1194,6 +1241,7 @@ async function getWorkspaceGraph(
 
     });
 
+
     //----------------------------------
     // EMPTY GRAPH
     //----------------------------------
@@ -1203,6 +1251,14 @@ async function getWorkspaceGraph(
     ){
 
         return {
+
+            id:
+            Number(workspace.id),
+
+            workspace_name:
+            workspace.workspace_name,
+
+            roles,
 
             graph_exists:
             false,
@@ -1218,6 +1274,11 @@ async function getWorkspaceGraph(
 
     }
 
+
+    //----------------------------------
+    // GET DEPENDENCIES
+    //----------------------------------
+
     const dependencies =
     await prisma.dependencies.findMany({
 
@@ -1227,6 +1288,11 @@ async function getWorkspaceGraph(
         }
 
     });
+
+
+    //----------------------------------
+    // BUILD NODES
+    //----------------------------------
 
     const nodes =
     services.map(
@@ -1258,6 +1324,11 @@ async function getWorkspaceGraph(
 
     );
 
+
+    //----------------------------------
+    // BUILD EDGES
+    //----------------------------------
+
     const edges =
     dependencies.map(
 
@@ -1281,7 +1352,20 @@ async function getWorkspaceGraph(
 
     );
 
+
+    //----------------------------------
+    // RETURN GRAPH
+    //----------------------------------
+
     return {
+
+        id:
+        Number(workspace.id),
+
+        workspace_name:
+        workspace.workspace_name,
+
+        roles,
 
         graph_exists:
         true,
@@ -1293,6 +1377,7 @@ async function getWorkspaceGraph(
     };
 
 }
+
 
 
 
@@ -1360,11 +1445,11 @@ async function generateImpactReport(
     });
 
     //--------------------------------------------------
-    // GET TOTAL DOMAINS
+    // GET ALL DOMAINS
     //--------------------------------------------------
 
-    const totalDomains =
-    await prisma.domains.count({
+    const domains =
+    await prisma.domains.findMany({
 
         where:{
 
@@ -1374,6 +1459,9 @@ async function generateImpactReport(
         }
 
     });
+
+    const totalDomains =
+    domains.length;
 
     //--------------------------------------------------
     // GET ALL DEPENDENCIES
@@ -1419,6 +1507,28 @@ async function generateImpactReport(
             Number(service.id),
 
             service.service_name
+
+        );
+
+    }
+
+    //--------------------------------------------------
+    // DOMAIN -> NAME MAP
+    //--------------------------------------------------
+
+    const domainNameMap =
+    new Map();
+
+    for(
+        const domain
+        of domains
+    ){
+
+        domainNameMap.set(
+
+            Number(domain.id),
+
+            domain.domain_name
 
         );
 
@@ -1528,6 +1638,32 @@ async function generateImpactReport(
     );
 
     //--------------------------------------------------
+    // AFFECTED NAMES
+    //--------------------------------------------------
+
+    const affectedServices =
+    [...visited].map(
+
+        serviceId =>
+
+        serviceNameMap.get(
+            serviceId
+        )
+
+    );
+
+    const affectedDomainNames =
+    [...affectedDomains].map(
+
+        domainId =>
+
+        domainNameMap.get(
+            domainId
+        )
+
+    );
+
+    //--------------------------------------------------
     // CALCULATE METRICS
     //--------------------------------------------------
 
@@ -1554,7 +1690,6 @@ async function generateImpactReport(
     )
     : 0;
 
-    // Overall severity based on service impact
     const severityScore =
     serviceImpactPercentage;
 
@@ -1579,6 +1714,41 @@ async function generateImpactReport(
         "MEDIUM";
 
     }
+
+    //--------------------------------------------------
+    // RETURN REPORT
+    //--------------------------------------------------
+
+    return{
+
+        rootService:{
+
+            id:
+            rootService.id,
+
+            name:
+            rootService.service_name
+
+        },
+
+        affectedServicesCount,
+
+        affectedDomainsCount,
+
+        affectedServices,
+
+        affectedDomainNames,
+
+        serviceImpactPercentage,
+
+        domainImpactPercentage,
+
+        severityScore,
+
+        severityLevel
+
+    };
+
 }
 
 
@@ -1670,8 +1840,6 @@ module.exports = {
     getWorkspaces,
     updateWorkspaceName,
     deleteWorkspace,
-    updatePersonalWorkspaceName,
-    deletePersonalWorkspace,
     cloneWorkspaceToPersonal,
     getWorkspaceGraph,
     generateImpactReport,

@@ -388,7 +388,17 @@ async function getDomains(
 
             domain_name:true,
 
-            lead_user_id:true
+            lead_user_id:true,
+
+            users:{
+
+                select:{
+
+                    name:true
+
+                }
+
+            }
 
         },
 
@@ -401,6 +411,7 @@ async function getDomains(
 
     });
 
+
     return domains.map(
 
         domain => ({
@@ -412,7 +423,13 @@ async function getDomains(
             domain.domain_name,
 
             lead_user_id:
-            Number(domain.lead_user_id)
+            Number(domain.lead_user_id),
+
+            lead_name:
+            domain.users?.name
+            ||
+
+            "Unknown User"
 
         })
 
