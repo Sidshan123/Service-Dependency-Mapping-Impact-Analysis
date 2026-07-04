@@ -1,0 +1,91 @@
+@import "tailwindcss";
+
+:root {
+
+  /* Fonts */
+
+  --font-sans: "Geist", sans-serif;
+  --font-mono: "Geist Mono", monospace;
+
+  /* Backgrounds */
+
+  --bg-primary: #0a0a0c;
+  --bg-secondary: #18181b;
+
+  /* Cards */
+
+  --card-bg: #18181b;
+  --border: #27272a;
+
+  /* Text */
+
+  --text-primary: #e4e4e7;
+  --text-secondary: #a1a1aa;
+
+  /* Accent */
+
+  --accent-primary: #0891b2;
+  --accent-hover: #0ea5e9;
+
+}
+
+* {
+
+  box-sizing: border-box;
+
+}
+
+html,
+body,
+#root {
+
+  min-height: 100vh;
+
+}
+
+body {
+
+  margin: 0;
+
+  background-color: var(--bg-primary);
+
+  color: var(--text-primary);
+
+  font-family: var(--font-sans);
+
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+}
+
+/* Primary Buttons */
+
+.btn-primary {
+
+  background-color: var(--accent-primary);
+  color: var(--text-primary);
+
+}
+
+.btn-primary:hover {
+
+  background-color: var(--accent-hover);
+
+}
+
+/* Secondary Buttons */
+
+.btn-secondary {
+
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+
+}
+
+.btn-secondary:hover {
+
+  background-color: #202024;
+  color: var(--text-primary);
+
+}

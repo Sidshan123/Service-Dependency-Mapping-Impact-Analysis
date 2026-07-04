@@ -280,40 +280,110 @@ async function getWorkspaces(
     const joinedTeamWorkspaces =
     memberships
     .map(
-        member => member.workspaces
+
+        member => ({
+
+            ...member.workspaces,
+
+            role:
+            member.role
+
+        })
+
     )
     .filter(
+
         workspace =>
+
         workspace.workspace_type ===
         "TEAM"
+
     );
 
     const teamWorkspaceMap =
     new Map();
 
+    //----------------------------------
+    // OWNED TEAM WORKSPACES
+    //----------------------------------
+
     for(
         const workspace
-        of [
-            ...ownedTeamWorkspaces,
-            ...joinedTeamWorkspaces
-        ]
+        of ownedTeamWorkspaces
     ){
 
         teamWorkspaceMap.set(
+
             Number(workspace.id),
+
             {
+
                 ...workspace,
-                id: Number(workspace.id),
+
+                id:
+                Number(workspace.id),
+
                 owner_user_id:
-                Number(workspace.owner_user_id)
+                Number(
+                    workspace.owner_user_id
+                ),
+
+                role:
+                "OWNER"
+
             }
+
         );
+
+    }
+
+    //----------------------------------
+    // JOINED TEAM WORKSPACES
+    //----------------------------------
+
+    for(
+        const workspace
+        of joinedTeamWorkspaces
+    ){
+
+        if(
+
+            !teamWorkspaceMap.has(
+
+                Number(workspace.id)
+
+            )
+
+        ){
+
+            teamWorkspaceMap.set(
+
+                Number(workspace.id),
+
+                {
+
+                    ...workspace,
+
+                    id:
+                    Number(workspace.id),
+
+                    owner_user_id:
+                    Number(
+                        workspace.owner_user_id
+                    )
+
+                }
+
+            );
+
+        }
 
     }
 
     return {
 
         PERSONAL:
+
         personalWorkspaces.map(
 
             workspace => ({
@@ -326,13 +396,17 @@ async function getWorkspaces(
                 owner_user_id:
                 Number(
                     workspace.owner_user_id
-                )
+                ),
+
+                role:
+                "OWNER"
 
             })
 
         ),
 
         TEAM:
+
         Array.from(
             teamWorkspaceMap.values()
         )
@@ -342,16 +416,18 @@ async function getWorkspaces(
 }
 
 
-
 async function deleteWorkspace(
     workspaceId
 ){
+
+    workspaceId =
+    Number(workspaceId);
 
     const workspace =
     await prisma.workspaces.findUnique({
 
         where:{
-            id:Number(workspaceId)
+            id:workspaceId
         }
 
     });
@@ -375,14 +451,16 @@ async function deleteWorkspace(
 
     }
 
+    //----------------------------------
+    // CHECK IF DOMAINS EXIST
+    //----------------------------------
+
     const domainExists =
     await prisma.domains.findFirst({
 
         where:{
-
             workspace_id:
-            Number(workspaceId)
-
+            workspaceId
         }
 
     });
@@ -395,10 +473,40 @@ async function deleteWorkspace(
 
     }
 
+    //----------------------------------
+    // DELETE WORKSPACE MEMBERS
+    //----------------------------------
+
+    await prisma.workspace_members.deleteMany({
+
+        where:{
+            workspace_id:
+            workspaceId
+        }
+
+    });
+
+    //----------------------------------
+    // DELETE WORKSPACE INVITES
+    //----------------------------------
+
+    await prisma.workspace_invites.deleteMany({
+
+        where:{
+            workspace_id:
+            workspaceId
+        }
+
+    });
+
+    //----------------------------------
+    // DELETE WORKSPACE
+    //----------------------------------
+
     await prisma.workspaces.delete({
 
         where:{
-            id:Number(workspaceId)
+            id:workspaceId
         }
 
     });
@@ -1432,95 +1540,47 @@ async function generateImpactReport(
     const totalServices =
     services.length;
 
-    const severityScore =
-    Math.round(
-
-        (
-            affectedServicesCount
-            /
-            totalServices
-        ) * 100
-
-    );
-
     const serviceImpactPercentage =
-    Math.round(
-
-        (
-            affectedServicesCount
-            /
-            totalServices
-        ) * 100
-
-    );
+    totalServices > 0
+    ? Math.round(
+        (affectedServicesCount / totalServices) * 100
+    )
+    : 0;
 
     const domainImpactPercentage =
-    Math.round(
+    totalDomains > 0
+    ? Math.round(
+        (affectedDomainsCount / totalDomains) * 100
+    )
+    : 0;
 
-        (
-            affectedDomainsCount
-            /
-            totalDomains
-        ) * 100
+    // Overall severity based on service impact
+    const severityScore =
+    serviceImpactPercentage;
 
-    );
+    let severityLevel =
+    "LOW";
 
-    //--------------------------------------------------
-    // RETURN REPORT
-    //--------------------------------------------------
+    if(severityScore >= 75){
 
-    return {
+        severityLevel =
+        "CRITICAL";
 
-        root_service_id:
-        Number(root_service_id),
+    }
+    else if(severityScore >= 50){
 
-        root_service_name:
-        rootService.service_name,
+        severityLevel =
+        "HIGH";
 
-        total_services:
-        totalServices,
+    }
+    else if(severityScore >= 25){
 
-        total_domains:
-        totalDomains,
+        severityLevel =
+        "MEDIUM";
 
-        affected_services_count:
-        affectedServicesCount,
-
-        affected_domains_count:
-        affectedDomainsCount,
-
-        service_impact_percentage:
-        serviceImpactPercentage,
-
-        domain_impact_percentage:
-        domainImpactPercentage,
-
-        severity_score:
-        severityScore,
-
-        affected_services:
-
-        Array.from(
-            visited
-        ).map(
-
-            serviceId => ({
-
-                id:
-                Number(serviceId),
-
-                service_name:
-                serviceNameMap.get(
-                    serviceId
-                )
-
-            })
-
-        )
-
-    };
-
+    }
 }
+
 
 
 
@@ -1536,18 +1596,18 @@ async function searchWorkspace(
 
     }
 
-    //----------------------------------
-    // SEARCH ONLY TEAM WORKSPACES
-    //----------------------------------
-
-    const workspace =
+    const workspaces =
     await prisma.workspaces
-    .findFirst({
+    .findMany({
 
         where:{
 
-            workspace_name:
-            workspaceName,
+            workspace_name:{
+
+                contains:
+                workspaceName
+
+            },
 
             workspace_type:
             "TEAM"
@@ -1560,32 +1620,40 @@ async function searchWorkspace(
 
             workspace_name:true,
 
-            workspace_type:true
+            workspace_type:true,
+
+            owner_user_id:true,
+
+            created_at:true
 
         }
 
     });
 
-    if(!workspace){
+    return workspaces.map(
 
-        throw new Error(
-            "Workspace not found"
-        );
+        workspace => ({
 
-    }
+            id:
+            Number(workspace.id),
 
-    return {
+            owner_user_id:
+            Number(
+                workspace.owner_user_id
+            ),
 
-        id:
-        Number(workspace.id),
+            workspace_name:
+            workspace.workspace_name,
 
-        workspace_name:
-        workspace.workspace_name,
+            workspace_type:
+            workspace.workspace_type,
 
-        workspace_type:
-        workspace.workspace_type
+            created_at:
+            workspace.created_at
 
-    };
+        })
+
+    );
 
 }
 
