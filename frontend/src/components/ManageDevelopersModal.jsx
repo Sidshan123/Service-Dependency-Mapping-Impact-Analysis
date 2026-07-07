@@ -1,5 +1,6 @@
 import {
 
+    useEffect,
     useState
 
 }
@@ -13,68 +14,117 @@ import {
 }
 from "lucide-react";
 
+import {
+
+    getMyDevelopers,
+    removeDeveloper
+
+}
+from "../services/workspaceService";
+
 
 function ManageDevelopersModal({
 
+    workspaceId,
     onClose
 
 }){
+    console.log("ManageDevelopersModal props:", {
+    workspaceId
+});
 
     const [
 
-        developers
+        developers,
+        setDevelopers
 
-    ] = useState([
+    ] = useState([]);
 
-        {
+    const [
 
-            id:1,
+        loading,
+        setLoading
 
-            name:"Adithya",
+    ] = useState(true);
 
-            domain:"Payments",
 
-            isMine:true
+    useEffect(()=>{
 
-        },
+        loadDevelopers();
 
-        {
+    },[]);
 
-            id:2,
 
-            name:"Shanmuk",
+    async function loadDevelopers(){
+         console.log("workspaceId =", workspaceId);
 
-            domain:"Payments",
+        try{
 
-            isMine:true
+            const response = await getMyDevelopers(
+                workspaceId
+            );
 
-        },
-
-        {
-
-            id:3,
-
-            name:"Rahul",
-
-            domain:"Orders",
-
-            isMine:false
+            setDevelopers(response);
 
         }
 
-    ]);
+        catch(error){
+
+            console.error(error);
+
+            alert(
+                "Failed to load developers."
+            );
+
+        }
+
+        finally{
+
+            setLoading(false);
+
+        }
+
+    }
 
 
-    function handleRemove(
-        developerId
+    async function handleRemove(
+    developerId
     ){
 
-        alert(
+        try{
 
-            `Remove Developer ${developerId}
-            coming soon!`
+            const response =
+            await removeDeveloper(
 
-        );
+                workspaceId,
+
+                developerId
+
+            );
+
+            alert(
+
+                response.message ||
+
+                "Developer removed successfully."
+
+            );
+
+            await loadDevelopers();
+
+        }
+
+        catch(error){
+
+            alert(
+
+                error.response?.data?.message ||
+
+                "Failed to remove developer."
+
+            );
+
+        }
 
     }
 
@@ -122,8 +172,6 @@ function ManageDevelopersModal({
 
             >
 
-                {/* HEADER */}
-
                 <div
 
                     className="
@@ -151,7 +199,6 @@ function ManageDevelopersModal({
 
                     </h2>
 
-
                     <button
 
                         onClick={onClose}
@@ -159,7 +206,6 @@ function ManageDevelopersModal({
                         className="
 
                             p-2
-
                             rounded-lg
 
                             hover:bg-zinc-800
@@ -168,9 +214,7 @@ function ManageDevelopersModal({
 
                     >
 
-                        <X
-                            size={20}
-                        />
+                        <X size={20}/>
 
                     </button>
 
@@ -190,15 +234,41 @@ function ManageDevelopersModal({
 
                     {
 
+                        loading ?
+
+                        (
+
+                            <p>
+
+                                Loading...
+
+                            </p>
+
+                        )
+
+                        :
+
+                        developers.length===0 ?
+
+                        (
+
+                            <p>
+
+                                No developers found.
+
+                            </p>
+
+                        )
+
+                        :
+
                         developers.map(
 
                             developer=>(
 
                                 <div
 
-                                    key={
-                                        developer.id
-                                    }
+                                    key={developer.id}
 
                                     className="
 
@@ -236,15 +306,9 @@ function ManageDevelopersModal({
 
                                         >
 
-                                            {
-
-                                                developer
-                                                .name
-
-                                            }
+                                            {developer.name}
 
                                         </h3>
-
 
                                         <p
 
@@ -258,71 +322,51 @@ function ManageDevelopersModal({
 
                                         >
 
-                                            Domain:
-
-                                            {" "}
-
-                                            {
-
-                                                developer
-                                                .domain
-
-                                            }
+                                            Domain: {developer.domain}
 
                                         </p>
 
                                     </div>
 
 
-                                    {
+                                    <button
 
-                                        developer.isMine && (
+                                        onClick={()=>
 
-                                            <button
+                                            handleRemove(
 
-                                                onClick={()=>{
+                                                developer.id
 
-                                                    handleRemove(
+                                            )
 
-                                                        developer
-                                                        .id
+                                        }
 
-                                                    );
+                                        className="
 
-                                                }}
+                                            flex
+                                            items-center
+                                            gap-2
 
-                                                className="
+                                            px-4
+                                            py-2
 
-                                                    flex
-                                                    items-center
-                                                    gap-2
+                                            rounded-xl
 
-                                                    px-4
-                                                    py-2
+                                            bg-red-500/15
 
-                                                    rounded-xl
+                                            text-red-400
 
-                                                    bg-red-500/15
+                                            hover:bg-red-500/25
 
-                                                    text-red-400
+                                        "
 
-                                                    hover:bg-red-500/25
+                                    >
 
-                                                "
+                                        <Trash2 size={18}/>
 
-                                            >
+                                        Remove
 
-                                                <Trash2
-                                                    size={18}
-                                                />
-
-                                                Remove
-
-                                            </button>
-
-                                        )
-
-                                    }
+                                    </button>
 
                                 </div>
 
@@ -369,6 +413,5 @@ function ManageDevelopersModal({
     );
 
 }
-
 
 export default ManageDevelopersModal;

@@ -19,7 +19,8 @@ from "lucide-react";
 
 import {
 
-    getDomains
+    getDomains,
+    updateDomainName
 
 }
 from "../services/workspaceService";
@@ -28,6 +29,7 @@ from "../services/workspaceService";
 function ManageDomainsModal({
 
     workspaceId,
+    refreshWorkspace,
     roles,
     onClose
 
@@ -38,7 +40,13 @@ function ManageDomainsModal({
         domains,
         setDomains
 
-    ] = useState([]);
+    ] = useState({
+
+        my_domains:[],
+
+        other_domains:[]
+
+    });
 
 
     const [
@@ -63,12 +71,6 @@ function ManageDomainsModal({
         setNewDomainName
 
     ] = useState("");
-
-
-    const isOwner =
-    roles.includes(
-        "OWNER"
-    );
 
 
     //--------------------------------------------------
@@ -97,38 +99,8 @@ function ManageDomainsModal({
                 workspaceId
             );
 
-
-            // Dummy ownership for now
-            // API integration later
-
-            const updatedDomains =
-
-                data.map(
-
-                    (
-
-                        domain,
-                        index
-
-                    )=>({
-
-                        ...domain,
-
-                        isMine:
-
-                        isOwner
-
-                        ||
-
-                        index === 0
-
-                    })
-
-                );
-
-
             setDomains(
-                updatedDomains
+                data
             );
 
         }
@@ -164,19 +136,92 @@ function ManageDomainsModal({
     // EDIT DOMAIN
     //--------------------------------------------------
 
-    function handleEdit(
-        domain
-    ){
+     async function handleEdit(
+            domain
+        ){
 
-        setEditingDomainId(
-            domain.id
-        );
+            const newName =
+            prompt(
+                "Enter new domain name:",
+                domain.domain_name
+            );
 
-        setNewDomainName(
-            domain.domain_name
-        );
+            if(
 
-    }
+                !newName ||
+
+                newName.trim() === "" ||
+
+                newName === domain.domain_name
+
+            ){
+
+                return;
+
+            }
+
+            try{
+
+                const response =
+                await updateDomainName(
+
+                    domain.id,
+
+                    newName.trim()
+
+                );
+
+                alert(
+
+                    response.message ||
+
+                    "Domain updated successfully."
+
+                );
+
+            }
+
+            catch(error){
+
+                console.error(
+                    "Update failed:",
+                    error
+                );
+
+                alert(
+
+                    error.response?.data?.message ||
+
+                    "Failed to update domain."
+
+                );
+
+                return;
+
+            }
+
+            try{
+
+                await fetchDomains();
+
+                if(refreshWorkspace){
+
+                    await refreshWorkspace();
+
+                }
+
+            }
+
+            catch(error){
+
+                console.error(
+                    "Refresh failed:",
+                    error
+                );
+
+            }
+
+        }
 
 
     function handleSave(){
@@ -185,9 +230,11 @@ function ManageDomainsModal({
             "Rename Domain API coming soon!"
         );
 
-        setDomains(
+        setDomains({
 
-            domains.map(
+            my_domains:
+
+            domains.my_domains.map(
 
                 domain=>
 
@@ -209,9 +256,13 @@ function ManageDomainsModal({
 
                 domain
 
-            )
+            ),
 
-        );
+            other_domains:
+
+            domains.other_domains
+
+        });
 
 
         setEditingDomainId(
@@ -320,7 +371,6 @@ function ManageDomainsModal({
 
                     </h2>
 
-
                     <button
 
                         onClick={onClose}
@@ -344,7 +394,6 @@ function ManageDomainsModal({
                     </button>
 
                 </div>
-
 
                 {/* CONTENT */}
 
@@ -386,118 +435,148 @@ function ManageDomainsModal({
 
                                 mt-8
 
-                                space-y-4
+                                space-y-8
 
                             "
 
                         >
 
-                            {
+                            {/* MY DOMAINS */}
 
-                                domains.map(
+                            <div>
 
-                                    domain=>(
+                                <h3
 
-                                        <div
+                                    className="
 
-                                            key={domain.id}
+                                        max-w-[550px]
+                                        mx-auto
 
-                                            className="
+                                        mb-3
 
-                                                max-w-[550px]
-                                                mx-auto
+                                        text-sm
+                                        font-semibold
 
-                                                rounded-2xl
+                                        uppercase
 
-                                                border
-                                                border-[var(--border)]
+                                        tracking-wider
 
-                                                bg-[var(--bg-primary)]
+                                        text-[var(--text-secondary)]
 
-                                                px-6
-                                                py-5
+                                    "
 
-                                                flex
-                                                items-center
-                                                justify-between
+                                >
 
-                                            "
+                                    My Domains
 
-                                        >
+                                </h3>
 
-                                            {
+                        {
 
-                                                editingDomainId ===
-                                                domain.id
+                                    domains.my_domains.map(
 
-                                                ?
+                                        domain=>(
 
-                                                (
+                                            <div
 
-                                                    <div
+                                                key={domain.id}
 
-                                                        className="
+                                                className="
 
-                                                            flex
-                                                            items-center
-                                                            gap-3
+                                                    max-w-[550px]
+                                                    mx-auto
+                                                    mb-4
 
-                                                            w-full
+                                                    rounded-2xl
 
-                                                        "
+                                                    border
+                                                    border-[var(--border)]
 
-                                                    >
+                                                    bg-[var(--bg-primary)]
 
-                                                        <input
+                                                    px-6
+                                                    py-5
 
-                                                            value={
-                                                                newDomainName
-                                                            }
+                                                    flex
+                                                    items-center
+                                                    justify-between
 
-                                                            onChange={
+                                                "
 
-                                                                event=>{
+                                            >
 
-                                                                    setNewDomainName(
+                                                {
 
-                                                                        event
-                                                                        .target
-                                                                        .value
+                                                    editingDomainId ===
+                                                    domain.id
 
-                                                                    );
+                                                    ?
 
-                                                                }
+                                                    (
 
-                                                            }
+                                                        <div
 
                                                             className="
 
-                                                                flex-1
+                                                                flex
+                                                                items-center
+                                                                gap-3
 
-                                                                px-4
-                                                                py-2
-
-                                                                rounded-xl
-
-                                                                bg-zinc-900
-
-                                                                border
-                                                                border-cyan-500
-
-                                                                outline-none
+                                                                w-full
 
                                                             "
 
-                                                        />
+                                                        >
 
+                                                            <input
 
-                                                        <button
+                                                                value={
+                                                                    newDomainName
+                                                                }
 
-                                                            onClick={
-                                                                handleSave
-                                                            }
+                                                                onChange={
 
-                                                            className="
+                                                                    event=>{
+
+                                                                        setNewDomainName(
+
+                                                                            event
+                                                                            .target
+                                                                            .value
+
+                                                                        );
+
+                                                                    }
+
+                                                                }
+
+                                                                className="
+
+                                                                    flex-1
+
+                                                                    px-4
+                                                                    py-2
+
+                                                                    rounded-xl
+
+                                                                    bg-zinc-900
+
+                                                                    border
+                                                                    border-cyan-500
+
+                                                                    outline-none
+
+                                                                "
+
+                                                            />
+
+                                                            <button
+
+                                                                onClick={
+                                                                    handleSave
+                                                                }
+
+                                                                className="
 
                                                                     p-2
 
@@ -511,219 +590,324 @@ function ManageDomainsModal({
 
                                                                 "
 
-                                                        >
+                                                            >
 
-                                                            <Check
-                                                                size={20}
-                                                            />
+                                                                <Check
+                                                                    size={20}
+                                                                />
 
-                                                        </button>
+                                                            </button>
 
+                                                            <button
 
-                                                        <button
-
-                                                            onClick={
-                                                                handleCancel
-                                                            }
-
-                                                            className="
-
-                                                                p-2
-
-                                                                rounded-lg
-
-                                                                text-red-400
-
-                                                                hover:bg-red-500/15
-
-                                                                transition
-
-"
-
-                                                        >
-
-                                                            <Ban
-                                                                size={20}
-                                                            />
-
-                                                        </button>
-
-                                                    </div>
-
-                                                )
-
-                                                :
-
-                                                (
-
-                                                    <>
-
-                                                        <div>
-
-                                                            <h3
+                                                                onClick={
+                                                                    handleCancel
+                                                                }
 
                                                                 className="
 
-                                                                    text-lg
-                                                                    font-semibold
+                                                                    p-2
+
+                                                                    rounded-lg
+
+                                                                    text-red-400
+
+                                                                    hover:bg-red-500/15
+
+                                                                    transition
 
                                                                 "
 
                                                             >
 
-                                                                {
+                                                                <Ban
+                                                                    size={20}
+                                                                />
 
-                                                                    domain
-                                                                    .domain_name
-
-                                                                }
-
-                                                            </h3>
-
-
-                                                            <p
-
-                                                                className="
-
-                                                                    text-sm
-
-                                                                    text-[var(--text-secondary)]
-
-                                                                "
-
-                                                            >
-
-                                                                Lead:
-
-                                                                {" "}
-
-                                                                {
-
-                                                                    domain
-                                                                    .lead_name
-
-                                                                }
-
-                                                            </p>
+                                                            </button>
 
                                                         </div>
 
+                                                    )
 
-                                                        {
+                                                    :
 
-                                                            domain.isMine && (
+                                                    (
 
-                                                                <div
+                                                        <>
+
+                                                            <div>
+
+                                                                <h3
 
                                                                     className="
 
-                                                                        flex
-                                                                        items-center
-                                                                        gap-3
+                                                                        text-lg
+                                                                        font-semibold
 
                                                                     "
 
                                                                 >
 
-                                                                    <button
+                                                                    {
 
-                                                                        onClick={()=>{
+                                                                        domain
+                                                                        .domain_name
 
-                                                                            handleEdit(
+                                                                    }
 
-                                                                                domain
+                                                                </h3>
 
-                                                                            );
+                                                                <p
 
-                                                                        }}
+                                                                    className="
 
-                                                                        className="
+                                                                        text-sm
 
-                                                                                p-3
+                                                                        text-[var(--text-secondary)]
 
-                                                                                rounded-xl
+                                                                    "
 
-                                                                                bg-cyan-500/15
+                                                                >
 
-                                                                                text-cyan-400
+                                                                    Lead:{" "}
 
-                                                                                hover:bg-cyan-500/25
+                                                                    {
 
-                                                                                transition
+                                                                        domain
+                                                                        .lead_name
 
-                                                                            "
+                                                                    }
 
-                                                                    >
+                                                                </p>
 
-                                                                        <Pencil
-                                                                            size={18}
-                                                                        />
+                                                            </div>
 
-                                                                    </button>
+                                                            <div
 
+                                                                className="
 
-                                                                    <button
+                                                                    flex
+                                                                    items-center
+                                                                    gap-3
 
-                                                                        onClick={()=>{
+                                                                "
 
-                                                                            handleDelete(
+                                                            >
 
-                                                                                domain.id
+                                                                <button
 
-                                                                            );
+                                                                    onClick={()=>{
 
-                                                                        }}
+                                                                        handleEdit(
+                                                                            domain
+                                                                        );
 
-                                                                        className="
+                                                                    }}
 
-                                                                            p-3
+                                                                    className="
 
-                                                                            rounded-xl
+                                                                        p-3
 
-                                                                            bg-red-500/15
+                                                                        rounded-xl
 
-                                                                            text-red-400
+                                                                        bg-cyan-500/15
 
-                                                                            hover:bg-red-500/25
+                                                                        text-cyan-400
 
-                                                                            transition
+                                                                        hover:bg-cyan-500/25
 
-                                                                        "
+                                                                        transition
 
-                                                                    >
+                                                                    "
 
-                                                                        <Trash2
-                                                                            size={18}
-                                                                        />
+                                                                >
 
-                                                                    </button>
+                                                                    <Pencil
+                                                                        size={18}
+                                                                    />
 
-                                                                </div>
+                                                                </button>
 
-                                                            )
+                                                                <button
 
-                                                        }
+                                                                    onClick={()=>{
 
-                                                    </>
+                                                                        handleDelete(
+                                                                            domain.id
+                                                                        );
 
-                                                )
+                                                                    }}
 
-                                            }
+                                                                    className="
 
-                                        </div>
+                                                                        p-3
+
+                                                                        rounded-xl
+
+                                                                        bg-red-500/15
+
+                                                                        text-red-400
+
+                                                                        hover:bg-red-500/25
+
+                                                                        transition
+
+                                                                    "
+
+                                                                >
+
+                                                                    <Trash2
+                                                                        size={18}
+                                                                    />
+
+                                                                </button>
+
+                                                            </div>
+
+                                                        </>
+
+                                                    )
+
+                                                }
+
+                                            </div>
+
+                                        )
 
                                     )
 
-                                )
+                                }
 
-                            }
+                            </div>
+
+
+                            {/* OTHER DOMAINS */}
+
+                            <div>
+
+                                <h3
+
+                                    className="
+
+                                        max-w-[550px]
+                                        mx-auto
+
+                                        mb-3
+
+                                        text-sm
+                                        font-semibold
+
+                                        uppercase
+
+                                        tracking-wider
+
+                                        text-[var(--text-secondary)]
+
+                                    "
+
+                                >
+
+                                    Other Domains
+
+                                </h3>
+
+                                {
+
+                                    domains.other_domains.map(
+
+                                        domain=>(
+
+                                            <div
+
+                                                key={domain.id}
+
+                                                className="
+
+                                                    max-w-[550px]
+                                                    mx-auto
+                                                    mb-4
+
+                                                    rounded-2xl
+
+                                                    border
+                                                    border-[var(--border)]
+
+                                                    bg-[var(--bg-primary)]
+
+                                                    px-6
+                                                    py-5
+
+                                                    flex
+                                                    items-center
+                                                    justify-between
+
+                                                "
+
+                                            >
+
+                                                <div>
+
+                                                    <h3
+
+                                                        className="
+
+                                                            text-lg
+                                                            font-semibold
+
+                                                        "
+
+                                                    >
+
+                                                        {
+
+                                                            domain
+                                                            .domain_name
+
+                                                        }
+
+                                                    </h3>
+
+                                                    <p
+
+                                                        className="
+
+                                                            text-sm
+
+                                                            text-[var(--text-secondary)]
+
+                                                        "
+
+                                                    >
+
+                                                        Lead:{" "}
+
+                                                        {
+
+                                                            domain
+                                                            .lead_name
+
+                                                        }
+
+                                                    </p>
+
+                                                </div>
+
+                                            </div>
+
+                                        )
+
+                                    )
+
+                                }
+
+                            </div>
 
                         </div>
 
                     )
 
                 }
-
 
                 <button
 
@@ -761,6 +945,5 @@ function ManageDomainsModal({
     );
 
 }
-
 
 export default ManageDomainsModal;

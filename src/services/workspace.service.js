@@ -570,7 +570,6 @@ async function deleteWorkspace(
 
     }
 
-
     //--------------------------------------------------
     // TEAM WORKSPACE
     //--------------------------------------------------
@@ -600,7 +599,6 @@ async function deleteWorkspace(
 
         }
 
-
         await prisma.$transaction(
 
             async(tx)=>{
@@ -609,8 +607,7 @@ async function deleteWorkspace(
                 // DELETE MEMBERS
                 //----------------------------------
 
-                await tx.workspace_members
-                .deleteMany({
+                await tx.workspace_members.deleteMany({
 
                     where:{
                         workspace_id:
@@ -618,14 +615,12 @@ async function deleteWorkspace(
                     }
 
                 });
-
 
                 //----------------------------------
                 // DELETE INVITES
                 //----------------------------------
 
-                await tx.workspace_invites
-                .deleteMany({
+                await tx.workspace_invites.deleteMany({
 
                     where:{
                         workspace_id:
@@ -634,13 +629,11 @@ async function deleteWorkspace(
 
                 });
 
-
                 //----------------------------------
                 // DELETE WORKSPACE
                 //----------------------------------
 
-                await tx.workspaces
-                .delete({
+                await tx.workspaces.delete({
 
                     where:{
                         id:workspaceId
@@ -661,7 +654,6 @@ async function deleteWorkspace(
 
     }
 
-
     //--------------------------------------------------
     // PERSONAL WORKSPACE
     //--------------------------------------------------
@@ -681,93 +673,72 @@ async function deleteWorkspace(
                 // DELETE DEPENDENCIES
                 //----------------------------------
 
-                await tx.dependencies
-                .deleteMany({
+                await tx.dependencies.deleteMany({
 
                     where:{
-
                         workspace_id:
                         workspaceId
-
                     }
 
                 });
-
 
                 //----------------------------------
                 // DELETE SERVICES
                 //----------------------------------
 
-                await tx.services
-                .deleteMany({
+                await tx.services.deleteMany({
 
                     where:{
-
                         workspace_id:
                         workspaceId
-
                     }
 
                 });
-
-
-                //----------------------------------
-                // DELETE DOMAINS
-                //----------------------------------
-
-                await tx.domains
-                .deleteMany({
-
-                    where:{
-
-                        workspace_id:
-                        workspaceId
-
-                    }
-
-                });
-
 
                 //----------------------------------
                 // DELETE MEMBERS
                 //----------------------------------
 
-                await tx.workspace_members
-                .deleteMany({
+                await tx.workspace_members.deleteMany({
 
                     where:{
-
                         workspace_id:
                         workspaceId
-
                     }
 
                 });
-
 
                 //----------------------------------
                 // DELETE INVITES
                 //----------------------------------
 
-                await tx.workspace_invites
-                .deleteMany({
+                await tx.workspace_invites.deleteMany({
 
                     where:{
-
                         workspace_id:
                         workspaceId
-
                     }
 
                 });
 
+                //----------------------------------
+                // DELETE DOMAINS
+                //----------------------------------
+
+                await tx.domains.deleteMany({
+
+                    where:{
+                        workspace_id:
+                        workspaceId
+                    }
+
+                });
 
                 //----------------------------------
                 // DELETE WORKSPACE
                 //----------------------------------
 
-                await tx.workspaces
-                .delete({
+                await tx.workspaces.delete({
 
                     where:{
                         id:workspaceId
@@ -787,7 +758,6 @@ async function deleteWorkspace(
         };
 
     }
-
 
     throw new Error(
         "Invalid workspace type"
@@ -2062,6 +2032,9 @@ async function searchWorkspace(
     );
 
 }
+
+
+
 
 
  

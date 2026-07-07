@@ -108,7 +108,8 @@ async(req,res)=>{
         const result =
         await domainService
         .getDomains(
-            req.params.workspaceId
+            req.params.workspaceId,
+            req.user.userId
         );
 
         return res

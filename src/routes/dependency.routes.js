@@ -42,4 +42,12 @@ router.delete(
     dependencyController.deleteDependency
 );
 
+// Workspace dependencies retrieval route
+
+router.get(
+    "/workspace/:workspaceId",
+    authenticate,
+    dependencyController.getWorkspaceDependencies
+);
+
 module.exports = router;

@@ -264,18 +264,216 @@ export async function getLeadInviteCode(
 }
 
 
+
 //--------------------------------------------------
 // GET DOMAIN LEADS
 //--------------------------------------------------
 
-export async function getDomains(
+
+export async function getDomainLeads(
+    workspaceId
+){
+
+    const response = await api.get(
+
+        `/workspace-leave/${workspaceId}/domain-leads`
+
+    );
+
+    return response.data;
+
+}
+
+export async function getDeveloperInviteCodes(
+
+    workspaceId
+
+){
+
+    const response =
+    await api.get(
+
+        `/invites/workspace/${workspaceId}/invite-codes/developer`
+
+    );
+
+    return response.data;
+
+}
+
+//--------------------------------------------------
+// GET MY DEVELOPERS
+//--------------------------------------------------
+
+
+export async function getMyDevelopers(workspaceId){
+
+    const response = await api.get(
+
+        `/workspace-leave/${workspaceId}/developers`
+
+    );
+
+    return response.data;
+
+}
+
+
+
+//--------------------------------------------------
+// GET DOMAINS
+//--------------------------------------------------
+
+
+export async function getDomains(workspaceId){
+
+    const response = await api.get(
+
+        `/domains/${workspaceId}`
+
+    );
+
+    return response.data;
+
+}
+
+
+
+export async function createService(
+    data
+){
+
+    const response =
+    await api.post(
+
+        "/services",
+
+        data
+
+    );
+
+    return response.data;
+
+}
+
+
+export async function getWorkspaceServices(
     workspaceId
 ){
 
     const response =
     await api.get(
 
-        `/domains/${workspaceId}`
+        `/services/workspace/${workspaceId}`
+
+    );
+
+    return response.data;
+
+}
+
+
+
+
+
+export async function createDependency(
+    data
+){
+
+    const response =
+    await api.post(
+
+        "/dependencies",
+
+        data
+
+    );
+
+    return response.data;
+
+}
+
+
+export async function getWorkspaceDependencies(
+    workspaceId
+){
+
+    const response =
+    await api.get(
+
+        `/dependencies/workspace/${workspaceId}`
+
+    );
+
+    return response.data;
+
+}
+
+
+
+export async function removeDeveloper(
+
+    workspaceId,
+    developerId
+
+){
+
+    const response =
+    await api.delete(
+
+        `/workspace-leave/${workspaceId}/developers/${developerId}`
+
+    );
+
+    return response.data;
+
+}
+
+
+export async function updateDomainName(
+
+    domainId,
+    domain_name
+
+){
+
+    const response =
+    await api.patch(
+
+        `/domains/${domainId}/name`,
+
+        {
+
+            domain_name
+
+        }
+
+    );
+
+    return response.data;
+
+}
+
+
+
+
+export async function updateServiceName(
+
+    serviceId,
+    service_name
+
+){
+
+    const response =
+    await api.patch(
+
+        `/services/${serviceId}/name`,
+
+        {
+
+            service_name
+
+        }
 
     );
 

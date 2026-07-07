@@ -8,7 +8,8 @@ const authenticate =
 require("../middleware/auth.middleware");
 
 const {
-    canModifyService
+    canModifyService,
+    canCreateService
 } = require(
     "../middleware/service.middleware"
 );
@@ -25,7 +26,7 @@ require(
 router.post(
     "/",
     authenticate,
-    canModifyService,
+    canCreateService,
     serviceController.createService
 );
 

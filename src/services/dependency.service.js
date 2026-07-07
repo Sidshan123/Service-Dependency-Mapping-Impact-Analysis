@@ -184,7 +184,156 @@ async function deleteDependency(
 
 }
 
+
+
+async function getWorkspaceDependencies(
+
+    workspaceId,
+    userId
+
+){
+
+    const dependencies =
+    await prisma.dependencies.findMany({
+
+        where:{
+
+            workspace_id:
+            Number(workspaceId)
+
+        },
+
+        include:{
+
+            services_dependencies_source_service_idToservices:{
+
+                include:{
+
+                    domains:true
+
+                }
+
+            },
+
+            services_dependencies_target_service_idToservices:{
+
+                include:{
+
+                    domains:true
+
+                }
+
+            }
+
+        },
+
+        orderBy:{
+
+            id:"asc"
+
+        }
+
+    });
+
+    const my_dependencies = [];
+    const other_dependencies = [];
+
+    dependencies.forEach(
+
+        dependency=>{
+
+            const sourceService =
+
+            dependency
+            .services_dependencies_source_service_idToservices;
+
+            const targetService =
+
+            dependency
+            .services_dependencies_target_service_idToservices;
+
+            const dependencyData = {
+
+                id:
+                Number(dependency.id),
+
+                source_service_id:
+                Number(sourceService.id),
+
+                target_service_id:
+                Number(targetService.id),
+
+                source_service_name:
+                sourceService.service_name,
+
+                target_service_name:
+                targetService.service_name,
+
+                source_domain_name:
+                sourceService
+                .domains
+                .domain_name,
+
+                target_domain_name:
+                targetService
+                .domains
+                .domain_name
+
+            };
+
+            if(
+
+                Number(
+
+                    sourceService
+                    .domains
+                    .lead_user_id
+
+                ) === Number(userId)
+
+                ||
+
+                Number(
+
+                    targetService
+                    .domains
+                    .lead_user_id
+
+                ) === Number(userId)
+
+            ){
+
+                my_dependencies.push(
+                    dependencyData
+                );
+
+            }
+
+            else{
+
+                other_dependencies.push(
+                    dependencyData
+                );
+
+            }
+
+        }
+
+    );
+
+    return{
+
+        my_dependencies,
+
+        other_dependencies
+
+    };
+
+}
+
+
 module.exports = {
     createDependencyService,
-    deleteDependency
+    deleteDependency,
+    getWorkspaceDependencies
 };

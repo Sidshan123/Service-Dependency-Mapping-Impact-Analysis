@@ -933,18 +933,19 @@ async function getDomainLeads(
 }
 
 
+
 async function getMyDevelopers(
     workspaceId,
     userId
-) {
+){
 
     // Step 1:
-    // Find all domains where user is lead
+    // Find all domains where the user is the lead
 
     const domains =
     await prisma.domains.findMany({
 
-        where: {
+        where:{
 
             workspace_id:
             Number(workspaceId),
@@ -952,66 +953,101 @@ async function getMyDevelopers(
             lead_user_id:
             userId
 
+        },
+
+        select:{
+
+            id:true,
+            domain_name:true
+
         }
 
     });
 
-    const result = [];
+    // If the lead doesn't own any domains
+
+    if(domains.length===0){
+
+        return [];
+
+    }
+
+    const domainIds =
+    domains.map(
+
+        domain=>domain.id
+
+    );
 
     // Step 2:
-    // Fetch developers for each domain
+    // Fetch all developers from those domains
 
-    for (const domain of domains) {
+    const developers =
+    await prisma.workspace_members.findMany({
 
-        const developers =
-        await prisma.workspace_members.findMany({
+        where:{
 
-            where: {
+            workspace_id:
+            Number(workspaceId),
 
-                workspace_id:
-                Number(workspaceId),
+            domain_id:{
+                in:domainIds
+            },
 
-                domain_id:
-                domain.id,
+            role:"DEVELOPER"
 
-                role:
-                "DEVELOPER"
+        },
+
+        include:{
+
+            users:{
+
+                select:{
+
+                    id:true,
+                    name:true,
+                    email:true
+
+                }
 
             },
 
-            include: {
+            domains:{
 
-                users: {
+                select:{
 
-                    select: {
-
-                        id: true,
-                        name: true,
-                        email: true
-
-                    }
+                    domain_name:true
 
                 }
 
             }
 
-        });
+        }
 
-        result.push({
+    });
 
-            domain_id:
-            domain.id,
+    // Step 3:
+    // Return a flat list
 
-            domain_name:
-            domain.domain_name,
+    return developers.map(
 
-            developers
+        developer=>({
 
-        });
+            id:
+            Number(developer.users.id),
 
-    }
+            name:
+            developer.users.name,
 
-    return result;
+            email:
+            developer.users.email,
+
+            domain:
+            developer.domains.domain_name
+
+        })
+
+    );
 
 }
 

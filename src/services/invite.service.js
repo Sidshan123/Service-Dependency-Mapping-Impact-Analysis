@@ -43,44 +43,106 @@ async function getLeadInviteCode(
 
 
 
-async function getDeveloperInviteCode(
-    domainId
+async function getDeveloperInviteCodes(
+
+    workspaceId,
+    userId
+
 ){
 
-    const invite =
-    await prisma.workspace_invites
-    .findFirst({
+    const domains =
+    await prisma.domains.findMany({
 
         where:{
 
-            domain_id:
-            Number(domainId)
+            workspace_id:
+            Number(workspaceId),
+
+            lead_user_id:
+            Number(userId)
+
+        },
+
+        select:{
+
+            id:true,
+
+            domain_name:true
+
+        },
+
+        orderBy:{
+
+            domain_name:"asc"
 
         }
 
     });
 
-    if(!invite){
+    if(domains.length === 0){
 
         throw new Error(
-            "Developer invite code not found"
+
+            "No domains assigned to this lead"
+
         );
 
     }
 
-    return {
+    const result = [];
 
-        invite_code:
-        invite.invite_code
+    for(const domain of domains){
 
-    };
+        const invites =
+        await prisma.workspace_invites.findMany({
+
+            where:{
+
+                workspace_id:
+                Number(workspaceId),
+
+                domain_id:
+                Number(domain.id),
+
+                role:
+                "DEVELOPER"
+
+            },
+
+            select:{
+
+                invite_code:true
+
+            }
+
+        });
+
+        result.push({
+
+            domain_id:
+            Number(domain.id),
+
+            domain_name:
+            domain.domain_name,
+
+            invite_code:
+            invites[0]?.invite_code || null
+
+        });
+
+    }
+
+    return result;
 
 }
+
+
+
 
 
 module.exports = {
 
     getLeadInviteCode,
-    getDeveloperInviteCode
+    getDeveloperInviteCodes
 
 };

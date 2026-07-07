@@ -1,151 +1,71 @@
 import {
-
     useEffect,
     useState
-
-}
-from "react";
+} from "react";
 
 import {
-
     useParams
-
-}
-from "react-router-dom";
+} from "react-router-dom";
 
 import {
-
     getWorkspaceGraph,
     generateImpactReport as generateReport
+} from "../services/workspaceService";
 
-}
-from "../services/workspaceService";
+import JoinWorkspaceCards from "../components/JoinWorkspaceCards";
+import WorkspaceHeader from "../components/WorkspaceHeader";
+import WorkspaceActions from "../components/WorkspaceActions";
+import LeadActions from "../components/LeadActions";
+import OwnerLeadActions from "../components/OwnerLeadActions";
+import DeveloperActions from "../components/DeveloperActions";
+import GraphView from "../components/GraphView";
+import ImpactSummary from "../components/ImpactSummary";
 
-import JoinWorkspaceCards
-from "../components/JoinWorkspaceCards";
+function Workspace() {
 
-import WorkspaceHeader
-from "../components/WorkspaceHeader";
+    const { id } = useParams();
 
-import WorkspaceActions
-from "../components/WorkspaceActions";
+    const [loading, setLoading] = useState(true);
+    const [workspace, setWorkspace] = useState(null);
+    const [roles, setRoles] = useState([]);
+    const [notMember, setNotMember] = useState(false);
+    const [impactReport, setImpactReport] = useState(null);
+    const [selectedService, setSelectedService] = useState(null);
 
-import LeadActions
-from "../components/LeadActions";
+    useEffect(() => {
 
-import DeveloperActions
-from "../components/DeveloperActions";
+        fetchWorkspace();
 
-import GraphView
-from "../components/GraphView";
+    }, [id]);
 
-import ImpactSummary
-from "../components/ImpactSummary";
+    async function fetchWorkspace() {
 
-
-function Workspace(){
-
-    const {
-
-        id
-
-    } = useParams();
-
-
-    const [
-
-        loading,
-        setLoading
-
-    ] = useState(true);
-
-
-    const [
-
-        workspace,
-        setWorkspace
-
-    ] = useState(null);
-
-
-    const [
-
-        roles,
-        setRoles
-
-    ] = useState([]);
-
-
-    const [
-
-        notMember,
-        setNotMember
-
-    ] = useState(false);
-
-
-    const [
-
-        impactReport,
-        setImpactReport
-
-    ] = useState(null);
-
-
-    const [
-
-        selectedService,
-        setSelectedService
-
-    ] = useState(null);
-
-
-    useEffect(
-
-        ()=>{
-
-            fetchWorkspace();
-
-        },
-
-        [id]
-
-    );
-
-
-    async function fetchWorkspace(){
-
-        try{
+        try {
 
             const data =
+                await getWorkspaceGraph(id);
 
-            await getWorkspaceGraph(id);
+            console.log("Workspace data:", data);
 
             setWorkspace(data);
-
-            setRoles(
-
-                data.roles || []
-
-            );
+            setRoles(data.roles || []);
 
         }
-        catch(error){
+        catch (error) {
 
-            if(
+            if (
 
                 error.response?.data?.message ===
-
                 "Only workspace members can view the graph"
 
-            ){
+            ) {
 
                 setNotMember(true);
 
             }
 
         }
-        finally{
+        finally {
 
             setLoading(false);
 
@@ -153,45 +73,31 @@ function Workspace(){
 
     }
 
+    async function handleGenerateImpactReport() {
 
-    async function handleGenerateImpactReport(){
+        if (!selectedService) {
 
-        if(!selectedService){
-
-            alert(
-                "Please select a service first"
-            );
-
+            alert("Please select a service first");
             return;
 
         }
 
-        try{
+        try {
 
             const response =
+                await generateReport(
+                    id,
+                    selectedService.id
+                );
 
-            await generateReport(
-
-                id,
-
-                selectedService.id
-
-            );
-
-            setImpactReport(
-                response
-            );
+            setImpactReport(response);
 
         }
-        catch(error){
+        catch (error) {
 
             alert(
 
-                error.response
-                ?.data
-                ?.message
-
-                ||
+                error.response?.data?.message ||
 
                 "Failed to generate report"
 
@@ -201,19 +107,11 @@ function Workspace(){
 
     }
 
+    if (loading) {
 
-    if(loading){
+        return (
 
-        return(
-
-            <div
-                className="
-                    min-h-screen
-                    flex
-                    items-center
-                    justify-center
-                "
-            >
+            <div className="min-h-screen flex items-center justify-center">
 
                 Loading...
 
@@ -223,10 +121,9 @@ function Workspace(){
 
     }
 
+    if (notMember) {
 
-    if(notMember){
-
-        return(
+        return (
 
             <JoinWorkspaceCards
                 workspaceId={id}
@@ -236,84 +133,52 @@ function Workspace(){
 
     }
 
-
     const isOwner =
-    roles.includes(
-        "OWNER"
-    );
-
+        roles.includes("OWNER");
 
     const isLead =
-    roles.includes(
-        "LEAD"
-    );
-
+        roles.includes("LEAD");
 
     const isDeveloper =
-    roles.includes(
-        "DEVELOPER"
-    );
-
+        roles.includes("DEVELOPER");
 
     const dashboardTitle =
 
         isOwner && isLead
 
-        ?
+            ? "Owner & Lead Dashboard"
 
-        "Owner & Lead Dashboard"
+            : isOwner
 
-        :
+                ? "Owner Dashboard"
 
-        isOwner
+                : isLead
 
-        ?
+                    ? "Lead Dashboard"
 
-        "Owner Dashboard"
-
-        :
-
-        isLead
-
-        ?
-
-        "Lead Dashboard"
-
-        :
-
-        "Developer Dashboard";
-
+                    : "Developer Dashboard";
 
     const dashboardDescription =
 
         isOwner && isLead
 
-        ?
+            ? "Manage your workspace, developers, services and dependencies."
 
-        "Manage your workspace, developers, services and dependencies."
+            : isOwner
 
-        :
+                ? "Manage your workspace, leads and domains."
 
-        isOwner
+                : isLead
 
-        ?
+                    ? "Manage your developers, services and dependencies."
 
-        "Manage your workspace, leads and domains."
-
-        :
-
-        isLead
-
-        ?
-
-        "Manage your developers, services and dependencies."
-
-        :
-
-        "Read-only access to services and impact reports.";
+                    : "View your services and dependencies in your workspace.";
 
 
-    return(
+                    console.log("Route id:", id);
+                    console.log("Workspace:", workspace);
+
+    return (
 
         <div
             className="
@@ -324,103 +189,105 @@ function Workspace(){
         >
 
             <WorkspaceHeader
-
                 roles={roles}
-
                 workspace={workspace}
-
                 setWorkspace={setWorkspace}
-
             />
 
+            <main className="px-6 py-6">
 
-            <main
-                className="
-                    px-6
-                    py-6
-                "
-            >
+                <div className="flex items-start justify-between">
 
-                <h1
-                    className="
-                        text-3xl
-                        font-bold
-                    "
-                >
+                    <div>
 
-                    {dashboardTitle}
+                        <h1 className="text-3xl font-bold">
 
-                </h1>
+                            {dashboardTitle}
 
+                        </h1>
 
-                <p
-                    className="
-                        mt-2
-                        text-[var(--text-secondary)]
-                    "
-                >
+                        <p
+                            className="
+                                mt-2
+                                text-[var(--text-secondary)]
+                            "
+                        >
 
-                    {dashboardDescription}
+                            {dashboardDescription}
 
-                </p>
+                        </p>
 
+                    </div>
 
-                {
-
-                    isOwner && (
-
-                        <WorkspaceActions
-
-                            workspace={workspace}
-
-                            roles={roles}
-
-                        />
-
-                    )
-
-                }
-
-
-                {
-
-                    isLead && (
-
-                        <LeadActions
-
-                            workspace={workspace}
-
-                            roles={roles}
-
-                        />
-
-                    )
-
-                }
-
-
-                {
-
-                    isDeveloper
-
-                    &&
-
-                    !isOwner
-
-                    &&
-
-                    !isLead && (
+                    {isDeveloper && !isOwner && !isLead && (
 
                         <DeveloperActions
-
                             workspace={workspace}
-
                         />
 
-                    )
+                    )}
 
-                }
+                </div>
 
+                {/* OWNER + LEAD */}
+
+                {isOwner && isLead && (
+
+                    <OwnerLeadActions
+                        workspace={workspace}
+                        roles={roles}
+                        refreshWorkspace={fetchWorkspace}
+                    />
+
+                )}
+
+                {/* OWNER */}
+
+                {isOwner && !isLead && (
+
+                    <WorkspaceActions
+                        workspace={workspace}
+                        workspaceId={id}
+                    />
+
+                )}
+
+                {/* LEAD */}
+
+                {isLead && !isOwner && (
+
+                    <LeadActions
+                        workspace={workspace}
+                        roles={roles}
+                        refreshWorkspace={fetchWorkspace}
+                    />
+
+                )}
+
+                {/* DEVELOPER */}
+
+                {isDeveloper && !isOwner && !isLead && (
+
+                    <div
+                        className="
+                            mt-6
+                            px-4
+                            py-3
+                            rounded-xl
+                            border
+                            border-blue-500/20
+                            bg-blue-500/10
+                            text-blue-300
+                            text-sm
+                        "
+                    >
+
+                        You have read-only access to this domain.
+                        Contact your domain lead for any changes.
+
+                    </div>
+
+                )}
 
                 <div
                     className="
@@ -432,40 +299,16 @@ function Workspace(){
                 >
 
                     <GraphView
-
-                        nodes={
-                            workspace?.nodes || []
-                        }
-
-                        edges={
-                            workspace?.edges || []
-                        }
-
-                        selectedService={
-                            selectedService
-                        }
-
-                        onSelectService={
-                            setSelectedService
-                        }
-
+                        nodes={workspace?.nodes || []}
+                        edges={workspace?.edges || []}
+                        selectedService={selectedService}
+                        onSelectService={setSelectedService}
                     />
 
-
                     <ImpactSummary
-
-                        selectedService={
-                            selectedService
-                        }
-
-                        impactReport={
-                            impactReport
-                        }
-
-                        onGenerateReport={
-                            handleGenerateImpactReport
-                        }
-
+                        selectedService={selectedService}
+                        impactReport={impactReport}
+                        onGenerateReport={handleGenerateImpactReport}
                     />
 
                 </div>

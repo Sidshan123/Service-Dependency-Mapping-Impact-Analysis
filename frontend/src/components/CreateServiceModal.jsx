@@ -1,26 +1,48 @@
-import { useState } from "react";
+import {
 
-import { X } from "lucide-react";
+    useEffect,
+    useState
+
+}
+from "react";
+
+import {
+
+    X
+
+}
+from "lucide-react";
+
+import {
+
+    getDomains,
+    createService
+
+}
+from "../services/workspaceService";
 
 
 function CreateServiceModal({
 
-    domains,
+    workspaceId,
+    refreshWorkspace,
     onClose
 
 }){
 
     const [
 
+        domains,
+        setDomains
+
+    ] = useState([]);
+
+    const [
+
         domainId,
         setDomainId
 
-    ] = useState(
-
-        domains?.[0]?.id || ""
-
-    );
-
+    ] = useState("");
 
     const [
 
@@ -29,39 +51,123 @@ function CreateServiceModal({
 
     ] = useState("");
 
+    const [
 
-    function handleCreateService(){
+        creating,
+        setCreating
+
+    ] = useState(false);
+
+
+    useEffect(()=>{
+
+        loadDomains();
+
+    },[]);
+
+
+    async function loadDomains(){
+
+        try{
+
+            const response =
+            await getDomains(
+                workspaceId
+            );
+
+            setDomains(
+
+                response.my_domains
+
+            );
+
+        }
+
+        catch(error){
+
+            console.error(error);
+
+            alert(
+
+                "Failed to load domains."
+
+            );
+
+        }
+
+    }
+
+
+    async function handleCreateService(){
 
         if(
 
             !domainId ||
+
             !serviceName.trim()
 
         ){
 
             alert(
+
                 "Please fill all fields"
+
             );
 
             return;
 
         }
 
+        try{
 
-        console.log({
+            setCreating(true);
 
-            domain_id:
-            domainId,
+            const response =
+            await createService({
 
-            service_name:
-            serviceName
+                domain_id:
+                Number(domainId),
 
-        });
+                service_name:
+                serviceName.trim()
 
+            });
 
-        alert(
-            "Create Service API coming soon!"
-        );
+            alert(
+
+                response.message ||
+
+                "Service created successfully."
+
+            );
+
+            await refreshWorkspace();
+
+            onClose();
+
+        }
+
+        catch(error){
+
+            console.error(error);
+
+            alert(
+
+                error.response?.data?.message ||
+
+                error.message ||
+
+                "Failed to create service."
+
+            );
+
+        }
+
+        finally{
+
+            setCreating(false);
+
+        }
 
     }
 
@@ -135,7 +241,6 @@ function CreateServiceModal({
 
                     </h2>
 
-
                     <button
 
                         onClick={onClose}
@@ -162,19 +267,27 @@ function CreateServiceModal({
                 {/* FORM */}
 
                 <div
-                    className="mt-8 space-y-6"
+
+                    className="
+
+                        mt-8
+                        space-y-6
+
+                    "
+
                 >
 
                     <div>
 
                         <label
+
                             className="text-sm"
+
                         >
 
                             Domain
 
                         </label>
-
 
                         <select
 
@@ -184,9 +297,7 @@ function CreateServiceModal({
 
                                 setDomainId(
 
-                                    event
-                                    .target
-                                    .value
+                                    event.target.value
 
                                 );
 
@@ -208,9 +319,17 @@ function CreateServiceModal({
                                 border
                                 border-[var(--border)]
 
+                                outline-none
+
                             "
 
                         >
+
+                            <option value="">
+
+                                Select Domain
+
+                            </option>
 
                             {
 
@@ -228,8 +347,7 @@ function CreateServiceModal({
 
                                             {
 
-                                                domain
-                                                .domain_name
+                                                domain.domain_name
 
                                             }
 
@@ -244,18 +362,17 @@ function CreateServiceModal({
                         </select>
 
                     </div>
-
-
-                    <div>
+                                        <div>
 
                         <label
+
                             className="text-sm"
+
                         >
 
                             Service Name
 
                         </label>
-
 
                         <input
 
@@ -265,9 +382,7 @@ function CreateServiceModal({
 
                                 setServiceName(
 
-                                    event
-                                    .target
-                                    .value
+                                    event.target.value
 
                                 );
 
@@ -305,8 +420,12 @@ function CreateServiceModal({
                 <button
 
                     onClick={
+
                         handleCreateService
+
                     }
+
+                    disabled={creating}
 
                     className="
 
@@ -320,11 +439,82 @@ function CreateServiceModal({
 
                         rounded-xl
 
+                        flex
+                        items-center
+                        justify-center
+                        gap-2
+
+                        disabled:opacity-60
+                        disabled:cursor-not-allowed
+
                     "
 
                 >
 
-                    Create Service
+                    {
+
+                        creating
+
+                        ?
+
+                        <>
+
+                            <svg
+
+                                className="
+
+                                    h-5
+                                    w-5
+
+                                    animate-spin
+
+                                "
+
+                                xmlns="http://www.w3.org/2000/svg"
+
+                                fill="none"
+
+                                viewBox="0 0 24 24"
+
+                            >
+
+                                <circle
+
+                                    className="opacity-25"
+
+                                    cx="12"
+
+                                    cy="12"
+
+                                    r="10"
+
+                                    stroke="currentColor"
+
+                                    strokeWidth="4"
+
+                                />
+
+                                <path
+
+                                    className="opacity-75"
+
+                                    fill="currentColor"
+
+                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+
+                                />
+
+                            </svg>
+
+                            Creating...
+
+                        </>
+
+                        :
+
+                        "Create Service"
+
+                    }
 
                 </button>
 
@@ -335,6 +525,5 @@ function CreateServiceModal({
     );
 
 }
-
 
 export default CreateServiceModal;

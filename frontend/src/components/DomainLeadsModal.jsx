@@ -3,23 +3,20 @@ import {
     useEffect,
     useState
 
-}
-from "react";
+} from "react";
 
 import {
 
     X,
-    Trash2
+    Pencil
 
-}
-from "lucide-react";
+} from "lucide-react";
 
 import {
 
-    getDomains
+    getDomainLeads
 
-}
-from "../services/workspaceService";
+} from "../services/workspaceService";
 
 
 function DomainLeadsModal({
@@ -60,15 +57,10 @@ function DomainLeadsModal({
 
     async function fetchDomains(){
 
-        console.log(
-            "workspaceId received:",
-            workspaceId
-        );
-
         try{
 
             const data =
-            await getDomains(
+            await getDomainLeads(
                 workspaceId
             );
 
@@ -87,7 +79,7 @@ function DomainLeadsModal({
 
                 ||
 
-                "Failed to fetch domains"
+                "Failed to fetch domain leads"
 
             );
 
@@ -103,13 +95,13 @@ function DomainLeadsModal({
     }
 
 
-    function handleRemove(
-        domainId
+    function handleModifyLead(
+        domain
     ){
 
         alert(
 
-            `Remove functionality for domain ${domainId} coming soon!`
+            `Modify Lead for ${domain.domain_name} coming soon!`
 
         );
 
@@ -176,10 +168,9 @@ function DomainLeadsModal({
                         "
                     >
 
-                        Domain Leads
+                        Manage Domain Leads
 
                     </h2>
-
 
                     <button
 
@@ -329,7 +320,6 @@ function DomainLeadsModal({
 
                                                 </h3>
 
-
                                                 <p
                                                     className="
 
@@ -355,16 +345,15 @@ function DomainLeadsModal({
 
                                             </div>
 
-
                                             <button
 
-                                                onClick={()=>
+                                                onClick={()=>{
 
-                                                    handleRemove(
-                                                        domain.id
-                                                    )
+                                                    handleModifyLead(
+                                                        domain
+                                                    );
 
-                                                }
+                                                }}
 
                                                 className="
 
@@ -377,11 +366,11 @@ function DomainLeadsModal({
 
                                                     rounded-xl
 
-                                                    bg-red-500/15
+                                                    bg-cyan-500/15
 
-                                                    text-red-400
+                                                    text-cyan-400
 
-                                                    hover:bg-red-500/25
+                                                    hover:bg-cyan-500/25
 
                                                     transition
 
@@ -391,11 +380,11 @@ function DomainLeadsModal({
 
                                             >
 
-                                                <Trash2
+                                                <Pencil
                                                     size={18}
                                                 />
 
-                                                Remove
+                                                Modify Lead
 
                                             </button>
 
@@ -450,6 +439,5 @@ function DomainLeadsModal({
     );
 
 }
-
 
 export default DomainLeadsModal;

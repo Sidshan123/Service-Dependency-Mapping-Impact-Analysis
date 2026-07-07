@@ -23,6 +23,9 @@ require(
     "../controllers/invite.controller"
 );
 
+const {canInviteDevelopers} =
+require("../middleware/domain.middleware");
+
 
 // Get domain lead invite code
 // :id -> workspace id
@@ -37,14 +40,13 @@ router.get(
 
 
 // Get developer invite code
-// :id -> domain id
 
 router.get(
-    "/domain/:id/developer-code",
+    "/workspace/:workspaceId/invite-codes/developer",
     authenticate,
-    canUpdateDomainName,
+    canInviteDevelopers,
     inviteController
-    .getDeveloperInviteCode
+    .getDeveloperInviteCodes
 );
 
 

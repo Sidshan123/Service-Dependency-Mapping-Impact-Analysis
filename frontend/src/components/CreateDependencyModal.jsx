@@ -1,14 +1,41 @@
-import { useState } from "react";
+import {
 
-import { X } from "lucide-react";
+    useEffect,
+    useState
+
+}
+from "react";
+
+import {
+
+    X
+
+}
+from "lucide-react";
+
+import {
+
+    getWorkspaceServices,
+    createDependency
+
+}
+from "../services/workspaceService";
 
 
 function CreateDependencyModal({
 
-    services = [],
+    workspaceId,
+    refreshWorkspace,
     onClose
 
 }){
+
+    const [
+
+        services,
+        setServices
+
+    ] = useState([]);
 
     const [
 
@@ -17,7 +44,6 @@ function CreateDependencyModal({
 
     ] = useState("");
 
-
     const [
 
         targetServiceId,
@@ -25,18 +51,69 @@ function CreateDependencyModal({
 
     ] = useState("");
 
+    const [
 
-    function handleCreateDependency(){
+        creating,
+        setCreating
+
+    ] = useState(false);
+
+
+    useEffect(()=>{
+
+        loadServices();
+
+    },[]);
+
+
+    async function loadServices(){
+
+        try{
+
+            const response =
+            await getWorkspaceServices(
+                workspaceId
+            );
+
+            setServices([
+
+                ...response.my_services,
+
+                ...response.other_services
+
+            ]);
+
+        }
+
+        catch(error){
+
+            console.error(error);
+
+            alert(
+
+                "Failed to load services."
+
+            );
+
+        }
+
+    }
+
+
+    async function handleCreateDependency(){
 
         if(
 
             !sourceServiceId ||
+
             !targetServiceId
 
         ){
 
             alert(
+
                 "Please select both services"
+
             );
 
             return;
@@ -52,7 +129,9 @@ function CreateDependencyModal({
         ){
 
             alert(
+
                 "Source and Target services cannot be the same"
+
             );
 
             return;
@@ -60,20 +139,57 @@ function CreateDependencyModal({
         }
 
 
-        console.log({
+        try{
 
-            source_service_id:
-            Number(sourceServiceId),
+            setCreating(true);
 
-            target_service_id:
-            Number(targetServiceId)
+            const response =
+            await createDependency({
 
-        });
+                workspace_id:
+                Number(workspaceId),
 
+                source_service_id:
+                Number(sourceServiceId),
 
-        alert(
-            "Create Dependency API coming soon!"
-        );
+                target_service_id:
+                Number(targetServiceId)
+
+            });
+
+            alert(
+
+                response.message ||
+
+                "Dependency created successfully."
+
+            );
+
+            await refreshWorkspace();
+
+            onClose();
+
+        }
+
+        catch(error){
+
+            console.error(error);
+
+            alert(
+
+                error.response?.data?.message ||
+
+                "Failed to create dependency."
+
+            );
+
+        }
+
+        finally{
+
+            setCreating(false);
+
+        }
 
     }
 
@@ -147,7 +263,6 @@ function CreateDependencyModal({
 
                     </h2>
 
-
                     <button
 
                         onClick={onClose}
@@ -174,19 +289,27 @@ function CreateDependencyModal({
                 {/* FORM */}
 
                 <div
-                    className="mt-8 space-y-6"
+
+                    className="
+
+                        mt-8
+                        space-y-6
+
+                    "
+
                 >
 
                     <div>
 
                         <label
+
                             className="text-sm"
+
                         >
 
                             Source Service
 
                         </label>
-
 
                         <select
 
@@ -218,6 +341,8 @@ function CreateDependencyModal({
                                 border
                                 border-[var(--border)]
 
+                                outline-none
+
                             "
 
                         >
@@ -227,7 +352,6 @@ function CreateDependencyModal({
                                 Select Source Service
 
                             </option>
-
 
                             {
 
@@ -245,8 +369,7 @@ function CreateDependencyModal({
 
                                             {
 
-                                                service
-                                                .service_name
+                                                service.service_name
 
                                             }
 
@@ -261,18 +384,17 @@ function CreateDependencyModal({
                         </select>
 
                     </div>
-
-
-                    <div>
+                                        <div>
 
                         <label
+
                             className="text-sm"
+
                         >
 
                             Target Service
 
                         </label>
-
 
                         <select
 
@@ -304,6 +426,8 @@ function CreateDependencyModal({
                                 border
                                 border-[var(--border)]
 
+                                outline-none
+
                             "
 
                         >
@@ -313,7 +437,6 @@ function CreateDependencyModal({
                                 Select Target Service
 
                             </option>
-
 
                             {
 
@@ -331,8 +454,7 @@ function CreateDependencyModal({
 
                                             {
 
-                                                service
-                                                .service_name
+                                                service.service_name
 
                                             }
 
@@ -354,8 +476,12 @@ function CreateDependencyModal({
                 <button
 
                     onClick={
+
                         handleCreateDependency
+
                     }
+
+                    disabled={creating}
 
                     className="
 
@@ -369,11 +495,82 @@ function CreateDependencyModal({
 
                         rounded-xl
 
+                        flex
+                        items-center
+                        justify-center
+                        gap-2
+
+                        disabled:opacity-60
+                        disabled:cursor-not-allowed
+
                     "
 
                 >
 
-                    Create Dependency
+                    {
+
+                        creating
+
+                        ?
+
+                        <>
+
+                            <svg
+
+                                className="
+
+                                    h-5
+                                    w-5
+
+                                    animate-spin
+
+                                "
+
+                                xmlns="http://www.w3.org/2000/svg"
+
+                                fill="none"
+
+                                viewBox="0 0 24 24"
+
+                            >
+
+                                <circle
+
+                                    className="opacity-25"
+
+                                    cx="12"
+
+                                    cy="12"
+
+                                    r="10"
+
+                                    stroke="currentColor"
+
+                                    strokeWidth="4"
+
+                                />
+
+                                <path
+
+                                    className="opacity-75"
+
+                                    fill="currentColor"
+
+                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+
+                                />
+
+                            </svg>
+
+                            Creating...
+
+                        </>
+
+                        :
+
+                        "Create Dependency"
+
+                    }
 
                 </button>
 
@@ -384,6 +581,5 @@ function CreateDependencyModal({
     );
 
 }
-
 
 export default CreateDependencyModal;

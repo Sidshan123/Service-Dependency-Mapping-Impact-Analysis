@@ -1,5 +1,6 @@
 import {
 
+    useEffect,
     useState
 
 }
@@ -14,26 +15,108 @@ import {
 }
 from "lucide-react";
 
+import {
+
+    getDeveloperInviteCodes
+
+}
+from "../services/workspaceService";
+
 
 function InviteDeveloperModal({
 
+    workspaceId,
     onClose
 
 }){
+    console.log("workspaceId:", workspaceId);
 
     const [
 
-        copied,
-        setCopied
+        inviteCodes,
+        setInviteCodes
 
-    ] = useState(false);
-
-
-    const inviteCode =
-    "DEV-ABC123";
+    ] = useState([]);
 
 
-    async function handleCopy(){
+    const [
+
+        loading,
+        setLoading
+
+    ] = useState(true);
+
+
+    const [
+
+        copiedCode,
+        setCopiedCode
+
+    ] = useState(null);
+
+
+    useEffect(
+
+        ()=>{
+
+            fetchInviteCodes();
+
+        },
+
+        []
+
+    );
+
+
+    async function fetchInviteCodes(){
+
+        try{
+
+            const data =
+            await getDeveloperInviteCodes(
+
+                workspaceId
+
+            );
+
+            setInviteCodes(
+
+                data
+
+            );
+
+        }
+
+        catch(error){
+
+            alert(
+
+                error.response?.data?.message
+
+                ||
+
+                "Failed to fetch invite codes"
+
+            );
+
+            onClose();
+
+        }
+
+        finally{
+
+            setLoading(false);
+
+        }
+
+    }
+
+
+    async function handleCopy(
+
+        inviteCode
+
+    ){
 
         await navigator
         .clipboard
@@ -41,16 +124,16 @@ function InviteDeveloperModal({
             inviteCode
         );
 
-        setCopied(
-            true
+        setCopiedCode(
+            inviteCode
         );
 
         setTimeout(
 
             ()=>{
 
-                setCopied(
-                    false
+                setCopiedCode(
+                    null
                 );
 
             },
@@ -87,7 +170,10 @@ function InviteDeveloperModal({
 
                 className="
 
-                    w-[500px]
+                    w-[650px]
+                    max-h-[80vh]
+
+                    overflow-y-auto
 
                     rounded-3xl
 
@@ -101,8 +187,6 @@ function InviteDeveloperModal({
                 "
 
             >
-
-                {/* HEADER */}
 
                 <div
 
@@ -127,10 +211,9 @@ function InviteDeveloperModal({
 
                     >
 
-                        Invite Developer
+                        Invite Developers
 
                     </h2>
-
 
                     <button
 
@@ -144,20 +227,15 @@ function InviteDeveloperModal({
 
                             hover:bg-zinc-800
 
-                            transition
-
                         "
 
                     >
 
-                        <X
-                            size={20}
-                        />
+                        <X size={20}/>
 
                     </button>
 
                 </div>
-
 
                 <p
 
@@ -173,115 +251,254 @@ function InviteDeveloperModal({
 
                 >
 
-                    Share this invite code
-                    with developers.
+                    Share the invite code for the required domain with developers.
 
                 </p>
 
+                {
 
-                <div
+                    loading
 
-                    className="
+                    ?
 
-                        mt-8
+                    (
 
-                        flex
-                        items-center
-                        gap-4
+                        <div
 
-                        rounded-2xl
+                            className="
 
-                        border
-                        border-[var(--border)]
+                                py-20
 
-                        bg-[var(--bg-primary)]
+                                text-center
 
-                        px-5
-                        py-4
+                            "
 
-                    "
+                        >
 
-                >
+                            Loading invite codes...
 
-                    <span
+                        </div>
 
-                        className="
+                    )
 
-                            flex-1
+                    :
 
-                            text-lg
-                            font-semibold
+                    (
 
-                            tracking-wider
+                        <div
 
-                        "
+                            className="
 
-                    >
+                                mt-8
 
-                        {inviteCode}
+                                space-y-4
 
-                    </span>
+                            "
 
+                        >
 
-                    <button
+                            {
 
-                        onClick={
-                            handleCopy
-                        }
+                                inviteCodes.map(
 
-                        className="
+                                    invite=>(
 
-                            btn-secondary
+                                        <div
 
-                            px-4
-                            py-2
+                                            key={
 
-                            rounded-xl
+                                                invite.domain_id
 
-                            flex
-                            items-center
-                            gap-2
+                                            }
 
-                        "
+                                            className="
 
-                    >
+                                            rounded-2xl
 
-                        {
+                                            border
+                                            border-[var(--border)]
 
-                            copied
+                                            bg-[var(--bg-primary)]
 
-                            ?
+                                            px-6
+                                            py-4
 
-                            <Check
-                                size={18}
-                            />
+                                            flex
+                                            items-center
+                                            justify-between
 
-                            :
+                                        "
 
-                            <Copy
-                                size={18}
-                            />
+                                        >
 
-                        }
+                                            <div
 
-                        {
+                                                className="
 
-                            copied
+                                                    space-y-2
 
-                            ?
+                                                "
 
-                            "Copied"
+                                            >
 
-                            :
+                                                <h3
 
-                            "Copy"
+                                                    className="
 
-                        }
+                                                        text-xl
+                                                        font-semibold
 
-                    </button>
+                                                    "
 
-                </div>
+                                                >
 
+                                                    {
+
+                                                        invite.domain_name
+
+                                                    }
+
+                                                </h3>
+
+                                                <p
+
+                                                    className="
+
+                                                        text-3xl
+
+                                                        font-bold
+
+                                                        tracking-[0.25em]
+
+                                                    "
+
+                                                >
+
+                                                    {
+
+                                                        invite.invite_code
+
+                                                    }
+
+                                                </p>
+
+                                            </div>
+
+                                            <button
+
+                                                onClick={()=>{
+
+                                                    handleCopy(
+
+                                                        invite.invite_code
+
+                                                    );
+
+                                                }}
+
+                                                className="
+
+                                                    w-[120px]
+                                                    h-12
+
+                                                    rounded-xl
+
+                                                    bg-cyan-600
+
+                                                    hover:bg-cyan-500
+
+                                                    text-white
+
+                                                    flex
+                                                    items-center
+                                                    justify-center
+                                                    gap-2
+
+                                                    transition
+
+                                                    shrink-0
+
+                                                "
+
+                                            >
+
+                                                {
+
+                                                    copiedCode ===
+
+                                                    invite.invite_code
+
+                                                    ?
+
+                                                    <Check
+                                                        size={18}
+                                                    />
+
+                                                    :
+
+                                                    <Copy
+                                                        size={18}
+                                                    />
+
+                                                }
+
+                                                {
+
+                                                    copiedCode ===
+
+                                                    invite.invite_code
+
+                                                    ?
+
+                                                    "Copied"
+
+                                                    :
+
+                                                    "Copy"
+
+                                                }
+
+                                            </button>
+
+                                        </div>
+
+                                    )
+
+                                )
+
+                            }
+
+                            {
+
+                                inviteCodes.length === 0 && (
+
+                                    <div
+
+                                        className="
+
+                                            py-12
+
+                                            text-center
+
+                                            text-[var(--text-secondary)]
+
+                                        "
+
+                                    >
+
+                                        No invite codes found.
+
+                                    </div>
+
+                                )
+
+                            }
+
+                        </div>
+
+                    )
+
+                }
 
                 <button
 
@@ -319,6 +536,5 @@ function InviteDeveloperModal({
     );
 
 }
-
 
 export default InviteDeveloperModal;

@@ -174,7 +174,7 @@ async function canUpdateDomainName(
             .json({
 
                 message:
-                "Only domain lead can update domain name or invite developers to the domain"
+                "Only domain lead can update domain name"
 
             });
 
@@ -199,9 +199,62 @@ async function canUpdateDomainName(
 }
 
 
+
+
+async function canInviteDevelopers(
+    req,
+    res,
+    next
+){
+
+    try{
+
+        const userId = req.user.userId;
+
+        const lead =
+        await prisma.workspace_members.findFirst({
+
+            where:{
+
+                user_id:Number(userId),
+
+                role:"LEAD"
+
+            }
+
+        });
+
+        if(!lead){
+
+            return res.status(403).json({
+
+                message:
+                "Only domain leads can invite developers or remove them."
+
+            });
+
+        }
+
+        next();
+
+    }
+    catch(error){
+
+        return res.status(500).json({
+
+            message:error.message
+
+        });
+
+    }
+
+}
+
+
 module.exports = {
 
     canManageDomain,
-    canUpdateDomainName
+    canUpdateDomainName,
+    canInviteDevelopers
 
 };

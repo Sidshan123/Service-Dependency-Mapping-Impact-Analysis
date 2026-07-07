@@ -247,7 +247,10 @@ async function deleteService(
 
 
 async function getWorkspaceServices(
-    workspaceId
+
+    workspaceId,
+    userId
+
 ){
 
     const services =
@@ -266,7 +269,17 @@ async function getWorkspaceServices(
 
             service_name:true,
 
-            domain_id:true
+            domain_id:true,
+
+            domains:{
+
+                select:{
+
+                    lead_user_id:true
+
+                }
+
+            }
 
         },
 
@@ -279,22 +292,58 @@ async function getWorkspaceServices(
 
     });
 
-    return services.map(
+    const my_services = [];
+    const other_services = [];
 
-        service => ({
+    services.forEach(
 
-            id:
-            Number(service.id),
+        service=>{
 
-            service_name:
-            service.service_name,
+            const serviceData = {
 
-            domain_id:
-            Number(service.domain_id)
+                id:
+                Number(service.id),
 
-        })
+                service_name:
+                service.service_name,
+
+                domain_id:
+                Number(service.domain_id)
+
+            };
+
+            if(
+
+                Number(service.domains.lead_user_id) ===
+                Number(userId)
+
+            ){
+
+                my_services.push(
+                    serviceData
+                );
+
+            }
+
+            else{
+
+                other_services.push(
+                    serviceData
+                );
+
+            }
+
+        }
 
     );
+
+    return{
+
+        my_services,
+
+        other_services
+
+    };
 
 }
 

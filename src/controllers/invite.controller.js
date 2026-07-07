@@ -14,7 +14,7 @@ async(req,res)=>{
         const result =
         await inviteService
         .getLeadInviteCode(
-            req.params.id
+            req.params.id,
         );
 
         return res
@@ -24,29 +24,32 @@ async(req,res)=>{
     }
     catch(error){
 
-        return res
-        .status(400)
-        .json({
+    console.error(error);
 
-            message:
-            error.message
+    return res.status(500).json({
 
-        });
+        message:error.stack
 
-    }
+    });
+
+}
 
 };
 
 
-exports.getDeveloperInviteCode =
+
+
+exports.getDeveloperInviteCodes =
 async(req,res)=>{
 
     try{
 
         const result =
-        await inviteService
-        .getDeveloperInviteCode(
-            req.params.id
+        await inviteService.getDeveloperInviteCodes(
+
+            req.params.workspaceId,
+            req.user.userId
+
         );
 
         return res
@@ -60,8 +63,7 @@ async(req,res)=>{
         .status(400)
         .json({
 
-            message:
-            error.message
+            message:error.message
 
         });
 

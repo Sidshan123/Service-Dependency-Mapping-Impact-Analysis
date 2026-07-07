@@ -1,4 +1,10 @@
-import { useState } from "react";
+import {
+
+    useEffect,
+    useState
+
+}
+from "react";
 
 import {
 
@@ -6,71 +12,161 @@ import {
     Pencil,
     Trash2
 
-} from "lucide-react";
+}
+from "lucide-react";
+
+import {
+
+    getWorkspaceServices,
+    updateServiceName
+
+}
+from "../services/workspaceService";
 
 
 function ManageServicesModal({
 
+    refreshWorkspace,
+    workspaceId,
     onClose
 
 }){
 
-    const services = [
+    const [
 
-        {
+        myServices,
+        setMyServices
 
-            id:1,
+    ] = useState([]);
 
-            service_name:
-            "User Service",
+    const [
 
-            domain_name:
-            "Payments",
+        otherServices,
+        setOtherServices
 
-            isMine:true
+    ] = useState([]);
 
-        },
+    const [
 
-        {
+        loading,
+        setLoading
 
-            id:2,
+    ] = useState(true);
 
-            service_name:
-            "Payment Gateway",
 
-            domain_name:
-            "Payments",
+    useEffect(()=>{
 
-            isMine:true
+        loadServices();
 
-        },
+    },[]);
 
-        {
 
-            id:3,
+    async function loadServices(){
 
-            service_name:
-            "Order Service",
+        try{
 
-            domain_name:
-            "Orders",
+            const response =
+            await getWorkspaceServices(
+                workspaceId
+            );
 
-            isMine:false
+            setMyServices(
+                response.my_services
+            );
+
+            setOtherServices(
+                response.other_services
+            );
 
         }
 
-    ];
+        catch(error){
 
+            console.error(error);
 
-    function handleEdit(
-        id
-    ){
+            alert(
+                "Failed to load services."
+            );
 
-        alert(
-            `Edit ${id} coming soon!`
-        );
+        }
+
+        finally{
+
+            setLoading(false);
+
+        }
 
     }
+
+
+    async function handleEdit(
+    service
+        ){
+
+            const newName =
+            prompt(
+
+                "Enter new service name:",
+
+                service.service_name
+
+            );
+
+            if(
+
+                !newName ||
+
+                newName.trim() === "" ||
+
+                newName === service.service_name
+
+            ){
+
+                return;
+
+            }
+
+            try{
+
+                const response =
+                await updateServiceName(
+
+                    service.id,
+
+                    newName.trim()
+
+                );
+
+                alert(
+
+                    response.message ||
+
+                    "Service updated successfully."
+
+                );
+
+                if(refreshWorkspace){
+
+                    await refreshWorkspace();
+
+                }
+                onClose();
+
+            }
+
+            catch(error){
+
+                alert(
+
+                    error.response?.data?.message ||
+
+                    "Failed to update service."
+
+                );
+
+            }
+
+        }
 
 
     function handleDelete(
@@ -156,7 +252,6 @@ function ManageServicesModal({
 
                     </h2>
 
-
                     <button
 
                         onClick={onClose}
@@ -164,7 +259,6 @@ function ManageServicesModal({
                         className="
 
                             p-2
-
                             rounded-lg
 
                             hover:bg-zinc-800
@@ -180,8 +274,6 @@ function ManageServicesModal({
                 </div>
 
 
-                {/* SERVICES */}
-
                 <div
 
                     className="
@@ -195,65 +287,61 @@ function ManageServicesModal({
 
                     {
 
-                        services.map(
+                            loading ?
 
-                            service=>(
+                            (
 
-                                <div
+                                <p>
 
-                                    key={service.id}
+                                    Loading...
 
-                                    className="
+                                </p>
 
-                                        max-w-[550px]
-                                        mx-auto
+                            )
 
-                                        rounded-2xl
+                            :
 
-                                        border
-                                        border-[var(--border)]
+                            myServices.length===0 &&
 
-                                        bg-[var(--bg-primary)]
+                            otherServices.length===0 ?
 
-                                        px-6
-                                        py-5
+                            (
 
-                                        flex
-                                        items-center
-                                        justify-between
+                                <p>
 
-                                    "
+                                    No services found.
 
-                                >
+                                </p>
 
-                                    <div>
+                            )
+
+                            :
+
+                            <>
+
+                                {/* MY SERVICES */}
+
+                                {
+
+                                    myServices.length>0 &&
+
+                                    <>
 
                                         <h3
 
                                             className="
 
-                                                text-lg
-                                                font-semibold
+                                                max-w-[550px]
+                                                mx-auto
 
-                                            "
-
-                                        >
-
-                                            {
-
-                                                service
-                                                .service_name
-
-                                            }
-
-                                        </h3>
-
-
-                                        <p
-
-                                            className="
+                                                mb-3
 
                                                 text-sm
+                                                font-semibold
+
+                                                uppercase
+
+                                                tracking-wider
 
                                                 text-[var(--text-secondary)]
 
@@ -261,124 +349,302 @@ function ManageServicesModal({
 
                                         >
 
-                                            Domain:
+                                            My Services
 
-                                            {" "}
+                                        </h3>
 
-                                            {
+                                        {
 
-                                                service
-                                                .domain_name
+                                            myServices.map(
 
-                                            }
+                                                service=>(
 
-                                        </p>
+                                                    <div
 
-                                    </div>
+                                                        key={service.id}
+
+                                                        className="
+
+                                                            max-w-[550px]
+                                                            mx-auto
+
+                                                            rounded-2xl
+
+                                                            border
+                                                            border-[var(--border)]
+
+                                                            bg-[var(--bg-primary)]
+
+                                                            px-6
+                                                            py-5
+
+                                                            mb-4
+
+                                                            flex
+                                                            items-center
+                                                            justify-between
+
+                                                        "
+
+                                                    >
+
+                                                        <div>
+
+                                                            <h3
+
+                                                                className="
+
+                                                                    text-lg
+                                                                    font-semibold
+
+                                                                "
+
+                                                            >
+
+                                                                {
+
+                                                                    service
+                                                                    .service_name
+
+                                                                }
+
+                                                            </h3>
+
+                                                            <p
+
+                                                                className="
+
+                                                                    text-sm
+
+                                                                    text-[var(--text-secondary)]
+
+                                                                "
+
+                                                            >
+
+                                                                
+
+                                                            </p>
+
+                                                        </div>
+
+                                                        <div
+
+                                                            className="
+
+                                                                flex
+                                                                gap-3
+
+                                                            "
+
+                                                        >
+
+                                                            <button
+
+                                                                onClick={()=>{
+
+                                                                    handleEdit(
+
+                                                                        service
+
+                                                                    );
+
+                                                                }}
+
+                                                                className="
+
+                                                                    p-3
+
+                                                                    rounded-xl
+
+                                                                    bg-cyan-500/15
+
+                                                                    text-cyan-400
+
+                                                                    hover:bg-cyan-500/25
+
+                                                                "
+
+                                                            >
+
+                                                                <Pencil
+                                                                    size={18}
+                                                                />
+
+                                                            </button>
+
+                                                            <button
+
+                                                                onClick={()=>{
+
+                                                                    handleDelete(
+
+                                                                        service.id
+
+                                                                    );
+
+                                                                }}
+
+                                                                className="
+
+                                                                    p-3
+
+                                                                    rounded-xl
+
+                                                                    bg-red-500/15
+
+                                                                    text-red-400
+
+                                                                    hover:bg-red-500/25
+
+                                                                "
+
+                                                            >
+
+                                                                <Trash2
+                                                                    size={18}
+                                                                />
+
+                                                            </button>
+
+                                                        </div>
+
+                                                    </div>
+
+                                                )
+
+                                            )
+
+                                        }
+
+                                    </>
+
+                                }
 
 
-                                    {
+                                {/* OTHER SERVICES */}
 
-                                        service.isMine && (
+                                {
 
-                                            <div
+                                    otherServices.length>0 &&
 
-                                                className="
+                                    <>
 
-                                                    flex
-                                                    items-center
-                                                    gap-3
+                                        <h3
 
-                                                "
+                                            className="
 
-                                            >
+                                                max-w-[550px]
+                                                mx-auto
 
-                                                <button
+                                                mt-6
+                                                mb-3
 
-                                                    onClick={()=>{
+                                                text-sm
+                                                font-semibold
 
-                                                        handleEdit(
+                                                uppercase
 
-                                                            service.id
+                                                tracking-wider
 
-                                                        );
+                                                text-[var(--text-secondary)]
 
-                                                    }}
+                                            "
 
-                                                    className="
+                                        >
 
-                                                        p-3
+                                            Other Services
 
-                                                        rounded-xl
+                                        </h3>
 
-                                                        bg-cyan-500/15
+                                        {
 
-                                                        text-cyan-400
+                                            otherServices.map(
 
-                                                        hover:bg-cyan-500/25
+                                                service=>(
 
-                                                        transition
+                                                    <div
 
-                                                    "
+                                                        key={service.id}
 
-                                                >
+                                                        className="
 
-                                                    <Pencil
-                                                        size={18}
-                                                    />
+                                                            max-w-[550px]
+                                                            mx-auto
 
-                                                </button>
+                                                            rounded-2xl
 
+                                                            border
+                                                            border-[var(--border)]
 
-                                                <button
+                                                            bg-[var(--bg-primary)]
 
-                                                    onClick={()=>{
+                                                            px-6
+                                                            py-5
 
-                                                        handleDelete(
+                                                            mb-4
 
-                                                            service.id
+                                                            flex
+                                                            items-center
+                                                            justify-between
 
-                                                        );
+                                                        "
 
-                                                    }}
+                                                    >
 
-                                                    className="
+                                                        <div>
 
-                                                        p-3
+                                                            <h3
 
-                                                        rounded-xl
+                                                                className="
 
-                                                        bg-red-500/15
+                                                                    text-lg
+                                                                    font-semibold
 
-                                                        text-red-400
+                                                                "
 
-                                                        hover:bg-red-500/25
+                                                            >
 
-                                                        transition
+                                                                {
 
-                                                    "
+                                                                    service
+                                                                    .service_name
 
-                                                >
+                                                                }
 
-                                                    <Trash2
-                                                        size={18}
-                                                    />
+                                                            </h3>
 
-                                                </button>
+                                                            <p
 
-                                            </div>
+                                                                className="
 
-                                        )
+                                                                    text-sm
 
-                                    }
+                                                                    text-[var(--text-secondary)]
 
-                                </div>
+                                                                "
 
-                            )
+                                                            >
 
-                        )
+                                                            </p>
 
-                    }
+                                                        </div>
+
+                                                    </div>
+
+                                                )
+
+                                            )
+
+                                        }
+
+                                    </>
+
+                                }
+
+                            </>
+
+                        }
 
                 </div>
 
@@ -402,8 +668,6 @@ function ManageServicesModal({
 
                         hover:bg-zinc-800
 
-                        transition
-
                     "
 
                 >
@@ -419,6 +683,5 @@ function ManageServicesModal({
     );
 
 }
-
 
 export default ManageServicesModal;

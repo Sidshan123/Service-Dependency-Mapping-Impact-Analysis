@@ -196,7 +196,7 @@ async (req, res) => {
         await workspaceLeaveService
         .getMyDevelopers(
 
-            req.query.workspaceId,
+            req.params.id,
 
             req.user.userId
 

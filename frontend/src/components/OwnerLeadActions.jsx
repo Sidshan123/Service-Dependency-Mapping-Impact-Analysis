@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
     UserPlus,
     Users,
@@ -7,26 +8,29 @@ import {
     Boxes,
     GitBranch,
     Copy,
-    LogOut
+    LogOut,
+    Trash2
 } from "lucide-react";
 
-import { useNavigate } from "react-router-dom";
-
 import {
-    cloneWorkspace
+    cloneWorkspace,
+    deleteWorkspace
 } from "../services/workspaceService";
 
-import CreateDomainModal from "./CreateDomainModal";
+import InviteLeadModal from "./InviteLeadModal";
+import DomainLeadsModal from "./DomainLeadsModal";
 import InviteDeveloperModal from "./InviteDeveloperModal";
 import ManageDevelopersModal from "./ManageDevelopersModal";
+import CreateDomainModal from "./CreateDomainModal";
 import ManageDomainsModal from "./ManageDomainsModal";
 import CreateServiceModal from "./CreateServiceModal";
 import ManageServicesModal from "./ManageServicesModal";
 import CreateDependencyModal from "./CreateDependencyModal";
 import ManageDependenciesModal from "./ManageDependenciesModal";
+import DeleteWorkspaceModal from "./DeleteWorkspaceModal";
 
-function LeadActions({
-    
+function OwnerLeadActions({
+
     workspace,
     roles,
     refreshWorkspace
@@ -38,14 +42,82 @@ function LeadActions({
     const isPersonal =
         workspace?.workspace_type === "PERSONAL";
 
-    const [showCreateDomainModal,setShowCreateDomainModal] = useState(false);
-    const [showManageDomainsModal,setShowManageDomainsModal] = useState(false);
-    const [showInviteDeveloperModal,setShowInviteDeveloperModal] = useState(false);
-    const [showManageDeveloperModal,setShowManageDeveloperModal] = useState(false);
-    const [showCreateServiceModal,setShowCreateServiceModal] = useState(false);
-    const [showManageServicesModal,setShowManageServicesModal] = useState(false);
-    const [showCreateDependencyModal,setShowCreateDependencyModal] = useState(false);
-    const [showManageDependenciesModal,setShowManageDependenciesModal] = useState(false);
+    const [
+
+        showInviteLeadModal,
+        setShowInviteLeadModal
+
+    ] = useState(false);
+
+    const [
+
+        showDomainLeadsModal,
+        setShowDomainLeadsModal
+
+    ] = useState(false);
+
+    const [
+
+        showInviteDeveloperModal,
+        setShowInviteDeveloperModal
+
+    ] = useState(false);
+
+    const [
+
+        showManageDeveloperModal,
+        setShowManageDeveloperModal
+
+    ] = useState(false);
+
+    const [
+
+        showCreateDomainModal,
+        setShowCreateDomainModal
+
+    ] = useState(false);
+
+    const [
+
+        showManageDomainsModal,
+        setShowManageDomainsModal
+
+    ] = useState(false);
+
+    const [
+
+        showCreateServiceModal,
+        setShowCreateServiceModal
+
+    ] = useState(false);
+
+    const [
+
+        showManageServicesModal,
+        setShowManageServicesModal
+
+    ] = useState(false);
+
+    const [
+
+        showCreateDependencyModal,
+        setShowCreateDependencyModal
+
+    ] = useState(false);
+
+    const [
+
+        showManageDependenciesModal,
+        setShowManageDependenciesModal
+
+    ] = useState(false);
+
+    const [
+
+        showDeleteModal,
+        setShowDeleteModal
+
+    ] = useState(false);
 
     async function handleCloneWorkspace(){
 
@@ -54,9 +126,17 @@ function LeadActions({
             const response =
                 await cloneWorkspace(workspace.id);
 
-            if(response.message === "Workspace cloned successfully"){
+            if(
 
-                navigate(`/workspace/${response.workspace_id}`);
+                response.message ===
+                "Workspace cloned successfully"
+
+            ){
+
+                navigate(
+                    `/workspace/${response.workspace_id}`
+                );
+
                 return;
 
             }
@@ -67,8 +147,53 @@ function LeadActions({
         catch(error){
 
             alert(
+
                 error.response?.data?.message ||
+
                 "Failed to clone workspace"
+
+            );
+
+        }
+
+    }
+
+    async function handleDeleteWorkspace(){
+
+        try{
+
+            const response =
+                await deleteWorkspace(workspace.id);
+
+            if(
+
+                response.message ===
+                "Workspace deleted successfully"
+
+                ||
+
+                response.message ===
+                "Personal workspace deleted successfully"
+
+            ){
+
+                navigate("/dashboard");
+
+                return;
+
+            }
+
+            alert(response.message);
+
+        }
+        catch(error){
+
+            alert(
+
+                error.response?.data?.message ||
+
+                "Failed to delete workspace"
+
             );
 
         }
@@ -100,6 +225,22 @@ function LeadActions({
                     {!isPersonal && (
 
                         <>
+
+                            <button
+                                onClick={() => setShowInviteLeadModal(true)}
+                                className="btn-primary h-14 px-6 rounded-2xl flex items-center gap-3"
+                            >
+                                <UserPlus size={18}/>
+                                Invite Lead
+                            </button>
+
+                            <button
+                                onClick={() => setShowDomainLeadsModal(true)}
+                                className="btn-secondary h-14 px-6 rounded-2xl flex items-center gap-3"
+                            >
+                                <FolderKanban size={18}/>
+                                Manage Domain Leads
+                            </button>
 
                             <button
                                 onClick={() => setShowInviteDeveloperModal(true)}
@@ -137,7 +278,8 @@ function LeadActions({
                         Manage Domains
                     </button>
 
-                    <button
+
+                                        <button
                         onClick={() => setShowCreateServiceModal(true)}
                         className="btn-secondary h-14 px-6 rounded-2xl flex items-center gap-3"
                     >
@@ -168,7 +310,8 @@ function LeadActions({
                         <GitBranch size={18}/>
                         Manage Dependencies
                     </button>
-                                        {!isPersonal && (
+
+                    {!isPersonal && (
 
                         <>
 
@@ -192,27 +335,43 @@ function LeadActions({
 
                     )}
 
+                    <button
+                        onClick={() => setShowDeleteModal(true)}
+                        className="
+                            h-14
+                            px-6
+                            rounded-2xl
+                            flex
+                            items-center
+                            gap-3
+                            bg-red-500/15
+                            text-red-400
+                            hover:bg-red-500/25
+                            transition
+                        "
+                    >
+                        <Trash2 size={18}/>
+                        Delete Workspace
+                    </button>
+
                 </div>
 
             </div>
 
-            {showCreateDomainModal && (
+            {showInviteLeadModal && (
 
-                <CreateDomainModal
-                    workspace={workspace}
+                <InviteLeadModal
                     workspaceId={workspace.id}
-                    onClose={() => setShowCreateDomainModal(false)}
+                    onClose={() => setShowInviteLeadModal(false)}
                 />
 
             )}
 
-            {showManageDomainsModal && (
+            {showDomainLeadsModal && (
 
-                <ManageDomainsModal
+                <DomainLeadsModal
                     workspaceId={workspace.id}
-                    roles={roles}
-                    refreshWorkspace={refreshWorkspace}
-                    onClose={() => setShowManageDomainsModal(false)}
+                    onClose={() => setShowDomainLeadsModal(false)}
                 />
 
             )}
@@ -235,22 +394,40 @@ function LeadActions({
 
             )}
 
+            {showCreateDomainModal && (
+
+                <CreateDomainModal
+                    workspace={workspace}
+                    workspaceId={workspace.id}
+                    onClose={() => setShowCreateDomainModal(false)}
+                />
+
+            )}
+
+            {showManageDomainsModal && (
+
+                <ManageDomainsModal
+                    workspaceId={workspace.id}
+                    roles={roles}
+                    onClose={() => setShowManageDomainsModal(false)}
+                />
+
+            )}
+
             {showCreateServiceModal && (
 
                 <CreateServiceModal
-                workspaceId={workspace.id}
-                refreshWorkspace={refreshWorkspace}
-                onClose={() =>
-                    setShowCreateServiceModal(false)
-                }
-            />
+                    workspaceId={workspace.id}
+                    refreshWorkspace={refreshWorkspace} 
+                    onClose={() => setShowCreateServiceModal(false)}
+                />
 
             )}
 
             {showManageServicesModal && (
 
                 <ManageServicesModal
-                    
+
                     workspaceId={workspace.id}
                     refreshWorkspace={refreshWorkspace}
                     onClose={() => setShowManageServicesModal(false)}
@@ -262,26 +439,37 @@ function LeadActions({
 
                 <CreateDependencyModal
 
-                workspaceId={workspace.id}
+                    workspaceId={workspace.id}
 
-                refreshWorkspace={refreshWorkspace}
+                    refreshWorkspace={refreshWorkspace}
 
-                onClose={()=>
+                    onClose={()=>
 
-                    setShowCreateDependencyModal(false)
+                        setShowCreateDependencyModal(false)
 
-                }
+                    }
 
-            />
+                />
 
             )}
-                        {showManageDependenciesModal && (
+
+            {showManageDependenciesModal && (
 
                 <ManageDependenciesModal
-                            
+
                     workspaceId={workspace.id}
-                
+                    refreshWorkspace={refreshWorkspace}
                     onClose={() => setShowManageDependenciesModal(false)}
+                />
+
+            )}
+
+            {showDeleteModal && (
+
+                <DeleteWorkspaceModal
+                    workspace={workspace}
+                    onClose={() => setShowDeleteModal(false)}
+                    onDelete={handleDeleteWorkspace}
                 />
 
             )}
@@ -292,4 +480,4 @@ function LeadActions({
 
 }
 
-export default LeadActions;
+export default OwnerLeadActions;

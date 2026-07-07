@@ -17,8 +17,7 @@ async function generateUniqueInviteCode(
             ).toString();
 
         const existingCode =
-        await tx.workspace_invites
-        .findUnique({
+        await tx.workspace_invites.findUnique({
 
             where:{
 
@@ -69,26 +68,55 @@ async function createDomain(
 
     }
 
-    const existingDomain =
-    await prisma.domains.findFirst({
+    const workspace =
+    await prisma.workspaces.findUnique({
 
         where:{
 
-            workspace_id,
+            id:workspace_id
 
-            domain_name
+        },
+
+        select:{
+
+            workspace_type:true
 
         }
 
     });
 
-    if(existingDomain){
+    if(!workspace){
 
         throw new Error(
-            "Domain already exists in this workspace"
+            "Workspace not found"
         );
 
     }
+
+    const existingDomain =
+await prisma.domains.findFirst({
+
+    where:{
+
+        workspace_id,
+
+        domain_name
+
+    }
+
+});
+
+console.log("workspace_id:", workspace_id);
+console.log("domain_name:", domain_name);
+console.log("existingDomain:", existingDomain);
+
+if(existingDomain){
+
+    throw new Error(
+        "Domain already exists in this workspace"
+    );
+
+}
 
     return await prisma.$transaction(
 
@@ -118,8 +146,7 @@ async function createDomain(
             // ADD DOMAIN LEAD
             //----------------------------------
 
-            await tx.workspace_members
-            .create({
+            await tx.workspace_members.create({
 
                 data:{
 
@@ -139,8 +166,28 @@ async function createDomain(
             });
 
             //----------------------------------
-            // GENERATE DEVELOPER
-            // INVITE CODE
+            // PERSONAL WORKSPACE
+            //----------------------------------
+
+            if(
+
+                workspace.workspace_type ===
+                "PERSONAL"
+
+            ){
+
+                return{
+
+                    message:
+                    "Domain created successfully"
+
+                };
+
+            }
+
+            //----------------------------------
+            // TEAM WORKSPACE
+            // GENERATE DEVELOPER INVITE
             //----------------------------------
 
             const developerInviteCode =
@@ -149,12 +196,10 @@ async function createDomain(
             );
 
             //----------------------------------
-            // STORE DEVELOPER
-            // INVITE CODE
+            // STORE DEVELOPER INVITE
             //----------------------------------
 
-            await tx.workspace_invites
-            .create({
+            await tx.workspace_invites.create({
 
                 data:{
 
@@ -173,7 +218,7 @@ async function createDomain(
 
             });
 
-            return {
+            return{
 
                 message:
                 "Domain created successfully",
@@ -188,7 +233,6 @@ async function createDomain(
     );
 
 }
-
 
 
 
@@ -368,8 +412,19 @@ async function deleteDomain(
 
 }
 
+
+
+
+
+
+
+
+
 async function getDomains(
-    workspaceId
+
+    workspaceId,
+    userId
+
 ){
 
     const domains =
@@ -411,31 +466,63 @@ async function getDomains(
 
     });
 
+    const my_domains = [];
+    const other_domains = [];
 
-    return domains.map(
+    domains.forEach(
 
-        domain => ({
+        domain => {
 
-            id:
-            Number(domain.id),
+            const domainData = {
 
-            domain_name:
-            domain.domain_name,
+                id:
+                Number(domain.id),
 
-            lead_user_id:
-            Number(domain.lead_user_id),
+                domain_name:
+                domain.domain_name,
 
-            lead_name:
-            domain.users?.name
-            ||
+                lead_user_id:
+                Number(domain.lead_user_id),
 
-            "Unknown User"
+                lead_name:
+                domain.users?.name
+                ||
 
-        })
+                "Unknown User"
+
+            };
+
+            if(
+
+                Number(domain.lead_user_id) ===
+                Number(userId)
+
+            ){
+
+                my_domains.push(domainData);
+
+            }
+
+            else{
+
+                other_domains.push(domainData);
+
+            }
+
+        }
 
     );
 
+    return{
+
+        my_domains,
+
+        other_domains
+
+    };
+
 }
+
 
 
 

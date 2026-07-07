@@ -1,59 +1,103 @@
 import {
 
+    useEffect,
+    useState
+
+}
+from "react";
+
+import {
+
     X,
-    Pencil,
     Trash2
 
 }
 from "lucide-react";
 
+import {
+
+    getWorkspaceDependencies
+
+}
+from "../services/workspaceService";
+
 
 function ManageDependenciesModal({
 
+    workspaceId,
     onClose
 
 }){
 
-    const dependencies = [
+    const [
 
-        {
+        myDependencies,
+        setMyDependencies
 
-            id:1,
+    ] = useState([]);
 
-            source:
-            "User Service",
+    const [
 
-            target:
-            "Payment Gateway",
+        otherDependencies,
+        setOtherDependencies
 
-            isMine:true
+    ] = useState([]);
 
-        },
+    const [
 
-        {
+        loading,
+        setLoading
 
-            id:2,
+    ] = useState(true);
 
-            source:
-            "Order Service",
 
-            target:
-            "Inventory Service",
+    useEffect(()=>{
 
-            isMine:false
+        loadDependencies();
+
+    },[]);
+
+
+    async function loadDependencies(){
+
+        try{
+
+            const response =
+            await getWorkspaceDependencies(
+                workspaceId
+            );
+
+            setMyDependencies(
+
+                response.my_dependencies
+
+            );
+
+            setOtherDependencies(
+
+                response.other_dependencies
+
+            );
 
         }
 
-    ];
+        catch(error){
 
+            console.error(error);
 
-    function handleEdit(
-        id
-    ){
+            alert(
 
-        alert(
-            `Edit ${id} coming soon!`
-        );
+                "Failed to load dependencies."
+
+            );
+
+        }
+
+        finally{
+
+            setLoading(false);
+
+        }
 
     }
 
@@ -139,7 +183,6 @@ function ManageDependenciesModal({
 
                     </h2>
 
-
                     <button
 
                         onClick={onClose}
@@ -164,175 +207,308 @@ function ManageDependenciesModal({
 
 
                 <div
-                    className="mt-8 space-y-4"
+
+                    className="
+
+                        mt-8
+                        space-y-4
+
+                    "
+
                 >
 
                     {
 
-                        dependencies.map(
+                        loading ?
 
-                            dependency=>(
+                        (
 
-                                <div
+                            <p>
 
-                                    key={dependency.id}
+                                Loading...
 
-                                    className="
+                            </p>
 
-                                        max-w-[600px]
-                                        mx-auto
+                        )
 
-                                        rounded-2xl
+                        :
 
-                                        border
-                                        border-[var(--border)]
+                        myDependencies.length===0 &&
 
-                                        bg-[var(--bg-primary)]
+                        otherDependencies.length===0 ?
 
-                                        px-6
-                                        py-5
+                        (
 
-                                        flex
-                                        items-center
-                                        justify-between
+                            <p>
 
-                                    "
+                                No dependencies found.
 
-                                >
+                            </p>
 
-                                    <div>
+                        )
+
+                        :
+
+                        <>
+                                                    {/* MY DEPENDENCIES */}
+
+                            {
+
+                                myDependencies.length > 0 && (
+
+                                    <>
 
                                         <h3
 
                                             className="
 
-                                                font-semibold
-                                                text-lg
+                                                max-w-[550px]
+                                                mx-auto
 
-                                            "
-
-                                        >
-
-                                            {
-
-                                                dependency
-                                                .source
-
-                                            }
-
-                                        </h3>
-
-
-                                        <p
-
-                                            className="
+                                                mb-3
 
                                                 text-sm
+                                                font-semibold
+
+                                                uppercase
+
+                                                tracking-wider
+
                                                 text-[var(--text-secondary)]
 
                                             "
 
                                         >
 
-                                            →
+                                            My Dependencies
 
-                                            {" "}
+                                        </h3>
 
-                                            {
+                                        {
 
-                                                dependency
-                                                .target
+                                            myDependencies.map(
 
-                                            }
+                                                dependency=>(
 
-                                        </p>
+                                                    <div
 
-                                    </div>
+                                                        key={dependency.id}
+
+                                                        className="
+
+                                                            max-w-[600px]
+                                                            mx-auto
+
+                                                            mb-4
+
+                                                            rounded-2xl
+
+                                                            border
+                                                            border-[var(--border)]
+
+                                                            bg-[var(--bg-primary)]
+
+                                                            px-6
+                                                            py-5
+
+                                                            flex
+                                                            items-center
+                                                            justify-between
+
+                                                        "
+
+                                                    >
+
+                                                        <h3
+
+                                                            className="
+
+                                                                text-lg
+                                                                font-semibold
+
+                                                            "
+
+                                                        >
+
+                                                            {
+
+                                                                dependency
+                                                                .source_service_name
+
+                                                            }
+
+                                                            {" → "}
+
+                                                            {
+
+                                                                dependency
+                                                                .target_service_name
+
+                                                            }
+
+                                                        </h3>
+
+                                                        <button
+
+                                                            onClick={()=>{
+
+                                                                handleDelete(
+
+                                                                    dependency.id
+
+                                                                );
+
+                                                            }}
+
+                                                            className="
+
+                                                                p-3
+
+                                                                rounded-xl
+
+                                                                bg-red-500/15
+
+                                                                text-red-400
+
+                                                                hover:bg-red-500/25
+
+                                                                transition
+
+                                                            "
+
+                                                        >
+
+                                                            <Trash2
+                                                                size={18}
+                                                            />
+
+                                                        </button>
+
+                                                    </div>
+
+                                                )
+
+                                            )
+
+                                        }
+
+                                    </>
+
+                                )
+
+                            }
 
 
-                                    {
+                            {/* OTHER DEPENDENCIES */}
 
-                                        dependency.isMine && (
+                            {
 
-                                            <div
-                                                className="
-                                                    flex
-                                                    gap-3
-                                                "
-                                            >
+                                otherDependencies.length > 0 && (
 
-                                                <button
+                                    <>
 
-                                                    onClick={()=>{
+                                        <h3
 
-                                                        handleEdit(
+                                            className="
 
-                                                            dependency.id
+                                                max-w-[550px]
+                                                mx-auto
 
-                                                        );
+                                                mt-6
+                                                mb-3
 
-                                                    }}
+                                                text-sm
+                                                font-semibold
 
-                                                    className="
+                                                uppercase
 
-                                                        p-3
+                                                tracking-wider
 
-                                                        rounded-xl
+                                                text-[var(--text-secondary)]
 
-                                                        bg-cyan-500/15
+                                            "
 
-                                                        text-cyan-400
+                                        >
 
-                                                    "
+                                            Other Dependencies
 
-                                                >
+                                        </h3>
 
-                                                    <Pencil size={18}/>
+                                        {
 
-                                                </button>
+                                            otherDependencies.map(
 
+                                                dependency=>(
 
-                                                <button
+                                                    <div
 
-                                                    onClick={()=>{
+                                                        key={dependency.id}
 
-                                                        handleDelete(
+                                                        className="
 
-                                                            dependency.id
+                                                            max-w-[600px]
+                                                            mx-auto
 
-                                                        );
+                                                            mb-4
 
-                                                    }}
+                                                            rounded-2xl
 
-                                                    className="
+                                                            border
+                                                            border-[var(--border)]
 
-                                                        p-3
+                                                            bg-[var(--bg-primary)]
 
-                                                        rounded-xl
+                                                            px-6
+                                                            py-5
 
-                                                        bg-red-500/15
+                                                        "
 
-                                                        text-red-400
+                                                    >
 
-                                                    "
+                                                        <h3
 
-                                                >
+                                                            className="
 
-                                                    <Trash2 size={18}/>
+                                                                text-lg
+                                                                font-semibold
 
-                                                </button>
+                                                            "
 
-                                            </div>
+                                                        >
 
-                                        )
+                                                            {
 
-                                    }
+                                                                dependency
+                                                                .source_service_name
 
-                                </div>
+                                                            }
 
-                            )
+                                                            {" → "}
 
-                        )
+                                                            {
+
+                                                                dependency
+                                                                .target_service_name
+
+                                                            }
+
+                                                        </h3>
+
+                                                    </div>
+
+                                                )
+
+                                            )
+
+                                        }
+
+                                    </>
+
+                                )
+
+                            }
+
+                        </>
 
                     }
 
@@ -356,6 +532,10 @@ function ManageDependenciesModal({
                         border
                         border-[var(--border)]
 
+                        hover:bg-zinc-800
+
+                        transition
+
                     "
 
                 >
@@ -371,6 +551,5 @@ function ManageDependenciesModal({
     );
 
 }
-
 
 export default ManageDependenciesModal;

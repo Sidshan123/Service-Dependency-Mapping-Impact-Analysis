@@ -24,6 +24,10 @@ const{canUpdateDomainName} =
 require("../middleware/domain.middleware");
 
 
+const{canInviteDevelopers} =
+require("../middleware/domain.middleware");
+
+
 //Exit options
 router.get(
     "/:workspaceId/exit-options",
@@ -91,7 +95,7 @@ router.get(
 router.get(
     "/:id/developers",
     authenticate,
-    canUpdateDomainName,
+    canInviteDevelopers,
     workspaceLeaveController
     .getMyDevelopers
 );
@@ -104,7 +108,7 @@ router.get(
 router.delete(
     "/:id/developers/:developerId",
     authenticate,
-    canUpdateDomainName,
+    canInviteDevelopers,
     workspaceLeaveController
     .removeDeveloper
 );

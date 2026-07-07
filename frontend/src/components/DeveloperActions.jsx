@@ -90,90 +90,95 @@ function DeveloperActions({
 
     return(
 
-        <div
-            className="mt-6"
-        >
-
             <div
-
                 className="
-
                     flex
-                    flex-wrap
-                    gap-4
-
+                    items-center
+                    justify-end
                 "
-
             >
 
-                <button
-
-                    onClick={
-                        handleCloneWorkspace
-                    }
+                <div
 
                     className="
 
-                        btn-secondary
-
-                        h-14
-                        px-6
-
-                        rounded-2xl
-
                         flex
                         items-center
-                        gap-3
+                        gap-4
+                        whitespace-nowrap
 
                     "
 
                 >
 
-                    <Copy
-                        size={18}
-                    />
+                    <button
 
-                    Clone Workspace
+                        onClick={
+                            handleCloneWorkspace
+                        }
 
-                </button>
+                        className="
+
+                            btn-secondary
+
+                            h-12
+                            px-5
+
+                            rounded-xl
+
+                            flex
+                            items-center
+                            gap-3
+
+                        "
+
+                    >
+
+                        <Copy
+                            size={18}
+                        />
+
+                        Clone Workspace
+
+                    </button>
 
 
-                <button
+                    <button
 
-                    onClick={
-                        handleExitWorkspace
-                    }
+                        onClick={
+                            handleExitWorkspace
+                        }
 
-                    className="
+                        className="
 
-                        btn-secondary
+                            btn-secondary
 
-                        h-14
-                        px-6
+                            h-12
+                            px-5
 
-                        rounded-2xl
+                            rounded-xl
 
-                        flex
-                        items-center
-                        gap-3
+                            flex
+                            items-center
+                            gap-3
 
-                    "
+                        "
 
-                >
+                    >
 
-                    <LogOut
-                        size={18}
-                    />
+                        <LogOut
+                            size={18}
+                        />
 
-                    Exit Workspace
+                        Exit Workspace
 
-                </button>
+                    </button>
+
+                </div>
 
             </div>
 
-        </div>
-
-    );
+        );
 
 }
 

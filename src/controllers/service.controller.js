@@ -106,7 +106,8 @@ async(req,res)=>{
         const result =
         await serviceService
         .getWorkspaceServices(
-            req.params.workspaceId
+            req.params.workspaceId,
+            req.user.userId
         );
 
         return res

@@ -16,17 +16,68 @@ async function validateLeadInviteCode(
 
         } = req.body;
 
-        if(
-            !workspace_id ||
-            !invite_code
-        ){
+        if(!workspace_id){
 
             return res
             .status(400)
             .json({
 
                 message:
-                "Workspace id and invite code are required"
+                "Workspace id is required"
+
+            });
+
+        }
+
+        const workspace =
+        await prisma.workspaces.findUnique({
+
+            where:{
+
+                id:Number(workspace_id)
+
+            },
+
+            select:{
+
+                workspace_type:true
+
+            }
+
+        });
+
+        if(!workspace){
+
+            return res
+            .status(404)
+            .json({
+
+                message:
+                "Workspace not found"
+
+            });
+
+        }
+
+        if(
+
+            workspace.workspace_type ===
+            "PERSONAL"
+
+        ){
+
+            return next();
+
+        }
+
+        if(!invite_code){
+
+            return res
+            .status(400)
+            .json({
+
+                message:
+                "Lead invite code is required"
 
             });
 
