@@ -227,9 +227,6 @@ async function generateUniqueInviteCode(
 
 
 
-
-
-
 async function getWorkspaces(
     userId
 ){
@@ -470,6 +467,30 @@ async function getWorkspaces(
     }
 
 
+    //----------------------------------
+    // ADD SERVICE COUNT TO TEAM WORKSPACES
+    //----------------------------------
+
+    for(
+        const workspace
+        of teamWorkspaceMap.values()
+    ){
+
+        workspace.service_count =
+        await prisma.services.count({
+
+            where:{
+
+                workspace_id:
+                workspace.id
+
+            }
+
+        });
+
+    }
+
+
     return {
 
         PERSONAL:
@@ -490,6 +511,19 @@ async function getWorkspaces(
 
                                 lead_user_id:
                                 userId
+
+                            }
+
+                        });
+
+
+                        const serviceCount =
+                        await prisma.services.count({
+
+                            where:{
+
+                                workspace_id:
+                                workspace.id
 
                             }
 
@@ -524,6 +558,9 @@ async function getWorkspaces(
                                 workspace.owner_user_id
                             ),
 
+                            service_count:
+                            serviceCount,
+
                             roles
 
                         };
@@ -544,6 +581,12 @@ async function getWorkspaces(
     };
 
 }
+
+
+
+
+
+
 
 
 async function deleteWorkspace(

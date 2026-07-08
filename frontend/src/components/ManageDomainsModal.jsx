@@ -20,7 +20,8 @@ from "lucide-react";
 import {
 
     getDomains,
-    updateDomainName
+    updateDomainName,
+    deleteDomain
 
 }
 from "../services/workspaceService";
@@ -230,39 +231,23 @@ function ManageDomainsModal({
             "Rename Domain API coming soon!"
         );
 
-        setDomains({
+
+
+        setDomains(previousDomains => ({
+
+            ...previousDomains,
 
             my_domains:
 
-            domains.my_domains.map(
+                previousDomains.my_domains.filter(
 
-                domain=>
+                    domain =>
 
-                domain.id ===
-                editingDomainId
+                        domain.id !== id
 
-                ?
+                )
 
-                {
-
-                    ...domain,
-
-                    domain_name:
-                    newDomainName
-
-                }
-
-                :
-
-                domain
-
-            ),
-
-            other_domains:
-
-            domains.other_domains
-
-        });
+        }));
 
 
         setEditingDomainId(
@@ -285,18 +270,71 @@ function ManageDomainsModal({
     // DELETE
     //--------------------------------------------------
 
-    function handleDelete(
-        domainId
-    ){
+        async function handleDelete(
+            id
+        ){
 
-        alert(
+            const confirmed = window.confirm(
 
-            `Delete Domain ${domainId}
-            API coming soon!`
+                "Are you sure you want to delete this domain?"
 
-        );
+            );
 
-    }
+            if(!confirmed){
+
+                return;
+
+            }
+
+            try{
+
+                const response =
+                    await deleteDomain(id);
+
+                alert(
+                    response.message
+                );
+
+                await refreshWorkspace?.();
+
+                setDomains(
+
+                previousDomains => ({
+
+                    ...previousDomains,
+
+                    my_domains:
+
+                        previousDomains.my_domains.filter(
+
+                            domain =>
+
+                                domain.id !== id
+
+                        )
+
+                })
+
+            );
+
+            }
+            catch(error){
+
+                console.error(error);
+
+                alert(
+
+                    error.response?.data?.message ||
+
+                    error.message ||
+
+                    "Failed to delete domain."
+
+                );
+
+            }
+
+        }
 
 
     return(

@@ -16,7 +16,8 @@ from "lucide-react";
 
 import {
 
-    getWorkspaceDependencies
+    getWorkspaceDependencies,
+    deleteDependency
 
 }
 from "../services/workspaceService";
@@ -25,6 +26,7 @@ from "../services/workspaceService";
 function ManageDependenciesModal({
 
     workspaceId,
+    refreshWorkspace,
     onClose
 
 }){
@@ -102,15 +104,60 @@ function ManageDependenciesModal({
     }
 
 
-    function handleDelete(
-        id
-    ){
+    async function handleDelete(
+            id
+        ){
 
-        alert(
-            `Delete ${id} coming soon!`
-        );
+            const confirmed = window.confirm(
 
-    }
+                "Are you sure you want to delete this dependency?"
+
+            );
+
+            if(!confirmed){
+
+                return;
+
+            }
+
+            try{
+
+                const response = await deleteDependency(id);
+
+                alert(response.message);
+
+                await refreshWorkspace();
+
+                setMyDependencies(
+
+                    previousDependencies =>
+
+                        previousDependencies.filter(
+
+                            dependency =>
+
+                                dependency.id !== id
+
+                        )
+
+                );
+
+            }
+            catch(error){
+
+            console.error(error);
+
+            console.log(error.response);
+
+            alert(
+                error.response?.data?.message ||
+                error.message ||
+                "Failed to delete dependency."
+            );
+
+        }
+
+        }
 
 
     return(
@@ -250,7 +297,7 @@ function ManageDependenciesModal({
                         :
 
                         <>
-                                                    {/* MY DEPENDENCIES */}
+                        {/* MY DEPENDENCIES */}
 
                             {
 

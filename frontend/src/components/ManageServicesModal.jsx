@@ -18,7 +18,8 @@ from "lucide-react";
 import {
 
     getWorkspaceServices,
-    updateServiceName
+    updateServiceName,
+    deleteService
 
 }
 from "../services/workspaceService";
@@ -169,15 +170,67 @@ function ManageServicesModal({
         }
 
 
-    function handleDelete(
-        id
-    ){
 
-        alert(
-            `Delete ${id} coming soon!`
-        );
+        async function handleDelete(
+            id
+        ){
 
-    }
+            const confirmed = window.confirm(
+
+                "Are you sure you want to delete this service?"
+
+            );
+
+            if(!confirmed){
+
+                return;
+
+            }
+
+            try{
+
+                const response =
+                    await deleteService(id);
+
+                alert(
+                    response.message
+                );
+
+                await refreshWorkspace?.();
+
+                setMyServices(
+
+                    previousServices =>
+
+                        previousServices.filter(
+
+                            service =>
+
+                                service.id !== id
+
+                        )
+
+                );
+
+            }
+            catch(error){
+
+                console.error(error);
+
+                alert(
+
+                    error.response?.data?.message ||
+
+                    error.message ||
+
+                    "Failed to delete service."
+
+                );
+
+            }
+
+        }
+    
 
 
     return(

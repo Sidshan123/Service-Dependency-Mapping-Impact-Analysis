@@ -3,11 +3,10 @@ require("../config/prisma");
 
 
 
-
-
 async function getExitOptions(
     workspaceId,
-    userId
+    userId,
+    exitType
 ){
 
     workspaceId =
@@ -17,7 +16,7 @@ async function getExitOptions(
     Number(userId);
 
     //----------------------------------
-    // FIND WORKSPACE
+    // VALIDATE WORKSPACE
     //----------------------------------
 
     const workspace =
@@ -37,72 +36,88 @@ async function getExitOptions(
 
     }
 
-    const isOwner =
-
-        Number(
-            workspace.owner_user_id
-        ) === userId;
-
-    //----------------------------------
-    // FIND DOMAINS
-    // WHERE USER IS LEAD
-    //----------------------------------
-
-    const domains =
-    await prisma.domains.findMany({
-
-        where:{
-
-            workspace_id:
-            workspaceId,
-
-            lead_user_id:
-            userId
-
-        }
-
-    });
-
-    const isLead =
-    domains.length > 0;
-
     //----------------------------------
     // DEVELOPER
     //----------------------------------
 
     if(
-        !isOwner &&
-        !isLead
+
+        exitType ===
+        "DEVELOPER"
+
     ){
 
-        return {
+        return{
 
             type:
             "DEVELOPER",
 
             message:
-            "You can directly exit this workspace"
+            "You can directly exit this workspace."
 
         };
 
     }
 
     //----------------------------------
-    // DOMAIN TRANSFERS
+    // LEAD / OWNER+LEAD
     //----------------------------------
 
-    const domainTransfers = [];
+    let domainTransfers = [];
 
-    if(isLead){
+    if(
 
-        for(
-            const domain
-            of domains
+        exitType === "LEAD"
+
+        ||
+
+        exitType === "OWNER_AND_LEAD"
+
+    ){
+
+        const leadDomains =
+        await prisma.domains.findMany({
+
+            where:{
+
+                workspace_id:
+                workspaceId,
+
+                lead_user_id:
+                userId
+
+            }
+
+        });
+
+        if(
+
+            leadDomains.length===0
+
         ){
 
+            throw new Error(
+
+                "You are not a lead of any domain."
+
+            );
+
+        }
+
+        for(
+
+            const domain
+
+            of leadDomains
+
+        ){
+
+            //----------------------------------
+            // DEVELOPERS
+            //----------------------------------
+
             const developers =
-            await prisma.workspace_members
-            .findMany({
+            await prisma.workspace_members.findMany({
 
                 where:{
 
@@ -123,13 +138,103 @@ async function getExitOptions(
 
             });
 
+            //----------------------------------
+            // EXISTING LEADS
+            //----------------------------------
+
+            const leads =
+            await prisma.workspace_members.findMany({
+
+                where:{
+
+                    workspace_id:
+                    workspaceId,
+
+                    role:
+                    "LEAD",
+
+                    user_id:{
+                        not:userId
+                    }
+
+                },
+
+                include:{
+
+                    users:true,
+
+                    domains:true
+
+                }
+
+            });
+
+            const uniqueLeads =
+            new Map();
+
+            for(
+
+                const lead
+
+                of leads
+
+            ){
+
+                if(
+
+                    !uniqueLeads.has(
+
+                        Number(
+                            lead.user_id
+                        )
+
+                    )
+
+                ){
+
+                    uniqueLeads.set(
+
+                        Number(
+                            lead.user_id
+                        ),
+
+                        {
+
+                            id:
+                            Number(
+                                lead.user_id
+                            ),
+
+                            name:
+                            lead.users.name,
+
+                            domain_name:
+                            lead.domains.domain_name,
+
+                            user_type:
+                            "LEAD"
+
+                        }
+
+                    );
+
+                }
+
+            }
+
             if(
-                developers.length === 0
+
+                developers.length===0
+
+                &&
+
+                uniqueLeads.size===0
+
             ){
 
                 throw new Error(
 
-                    `Domain '${domain.domain_name}' has no developers to become lead`
+                    `Domain '${domain.domain_name}' has no eligible replacement lead.`
 
                 );
 
@@ -149,7 +254,7 @@ async function getExitOptions(
 
                 developers.map(
 
-                    developer => ({
+                    developer=>({
 
                         id:
                         Number(
@@ -157,11 +262,22 @@ async function getExitOptions(
                         ),
 
                         name:
-                        developer.users.name
+                        developer.users.name,
+
+                        user_type:
+                        "DEVELOPER"
 
                     })
 
-                )
+                ),
+
+                existing_lead_candidates:
+
+                [
+
+                    ...uniqueLeads.values()
+
+                ]
 
             });
 
@@ -170,16 +286,23 @@ async function getExitOptions(
     }
 
     //----------------------------------
-    // OWNER CANDIDATES
+    // OWNER / OWNER+LEAD
     //----------------------------------
 
     let ownerCandidates = [];
 
-    if(isOwner){
+    if(
+
+        exitType === "OWNER"
+
+        ||
+
+        exitType === "OWNER_AND_LEAD"
+
+    ){
 
         const leads =
-        await prisma.workspace_members
-        .findMany({
+        await prisma.workspace_members.findMany({
 
             where:{
 
@@ -189,11 +312,8 @@ async function getExitOptions(
                 role:
                 "LEAD",
 
-                NOT:{
-
-                    user_id:
-                    userId
-
+                user_id:{
+                    not:userId
                 }
 
             },
@@ -205,47 +325,126 @@ async function getExitOptions(
         });
 
         if(
-            leads.length === 0
+
+            leads.length===0
+
         ){
 
             throw new Error(
 
-                "No domain leads available to become workspace owner"
+                "No domain leads available to become workspace owner."
 
             );
 
         }
 
+        const uniqueOwnerCandidates =
+        new Map();
+
+        for(
+
+            const lead
+
+            of leads
+
+        ){
+
+            if(
+
+                !uniqueOwnerCandidates.has(
+
+                    Number(
+                        lead.user_id
+                    )
+
+                )
+
+            ){
+
+                uniqueOwnerCandidates.set(
+
+                    Number(
+                        lead.user_id
+                    ),
+
+                    {
+
+                        id:
+                        Number(
+                            lead.user_id
+                        ),
+
+                        name:
+                        lead.users.name
+
+                    }
+
+                );
+
+            }
+
+        }
+
         ownerCandidates =
 
-        leads.map(
+        [
 
-            lead => ({
+            ...uniqueOwnerCandidates.values()
 
-                id:
-                Number(
-                    lead.user_id
-                ),
-
-                name:
-                lead.users.name
-
-            })
-
-        );
+        ];
 
     }
 
     //----------------------------------
-    // RETURN
+    // RESPONSE
     //----------------------------------
 
     if(
-        isOwner &&
-        isLead
+
+        exitType ===
+        "OWNER"
+
     ){
 
-        return {
+        return{
+
+            type:
+            "OWNER",
+
+            owner_candidates:
+            ownerCandidates
+
+        };
+
+    }
+
+    if(
+
+        exitType ===
+        "LEAD"
+
+    ){
+
+        return{
+
+            type:
+            "LEAD",
+
+            domain_transfers:
+            domainTransfers
+
+        };
+
+    }
+
+    if(
+
+        exitType ===
+        "OWNER_AND_LEAD"
+
+    ){
+
+        return{
 
             type:
             "OWNER_AND_LEAD",
@@ -260,29 +459,424 @@ async function getExitOptions(
 
     }
 
-    if(isOwner){
+    throw new Error(
 
-        return {
+        "Invalid exit type."
 
-            type:
-            "OWNER",
+    );
 
-            owner_candidates:
-            ownerCandidates
+}
+
+
+
+
+
+
+async function exitWorkspace(
+    workspaceId,
+    userId,
+    data
+){
+
+    workspaceId =
+    Number(workspaceId);
+
+    userId =
+    Number(userId);
+
+    //----------------------------------
+    // GET EXIT TYPE
+    //----------------------------------
+
+    const options =
+    await getExitOptions(
+
+        workspaceId,
+        userId
+
+    );
+
+    //----------------------------------
+    // DEVELOPER
+    //----------------------------------
+
+    if(
+
+        options.type ===
+        "DEVELOPER"
+
+    ){
+
+        await prisma.workspace_members.deleteMany({
+
+            where:{
+
+                workspace_id:
+                workspaceId,
+
+                user_id:
+                userId
+
+            }
+
+        });
+
+        return{
+
+            message:
+            "Exited workspace successfully"
 
         };
 
     }
 
-    return {
+    //----------------------------------
+    // LEAD
+    //----------------------------------
 
-        type:
-        "LEAD",
+    if(
 
-        domain_transfers:
-        domainTransfers
+        options.type ===
+        "LEAD"
 
-    };
+    ){
+
+        const{
+
+            domain_transfers
+
+        } = data;
+
+        if(
+
+            !domain_transfers ||
+
+            domain_transfers.length===0
+
+        ){
+
+            throw new Error(
+
+                "Domain transfers are required."
+
+            );
+
+        }
+
+        //----------------------------------
+        // CHANGE EVERY DOMAIN LEAD
+        //----------------------------------
+
+        for(
+
+            const transfer
+
+            of domain_transfers
+
+        ){
+
+            if(
+
+                !transfer.new_lead_user_id ||
+
+                !transfer.user_type
+
+            ){
+
+                throw new Error(
+
+                    `Please select a replacement lead for '${transfer.domain_name}'.`
+
+                );
+
+            }
+
+            await changeDomainLead(
+
+                transfer.domain_id,
+
+                {
+
+                    new_lead_user_id:
+                    transfer.new_lead_user_id,
+
+                    user_type:
+                    transfer.user_type,
+
+                    //----------------------------------
+                    // USER IS EXITING
+                    //----------------------------------
+
+                    remove_old_lead:
+                    true
+
+                }
+
+            );
+
+        }
+
+        //----------------------------------
+        // REMOVE USER FROM WORKSPACE
+        //----------------------------------
+
+        await prisma.workspace_members.deleteMany({
+
+            where:{
+
+                workspace_id:
+                workspaceId,
+
+                user_id:
+                userId
+
+            }
+
+        });
+
+        return{
+
+            message:
+            "Exited workspace successfully"
+
+        };
+
+    }
+
+    //----------------------------------
+    // OWNER
+    //----------------------------------
+        //----------------------------------
+    // OWNER
+    //----------------------------------
+
+    if(
+
+        options.type ===
+        "OWNER"
+
+    ){
+
+        const{
+
+            new_owner_user_id
+
+        } = data;
+
+        if(
+
+            !new_owner_user_id
+
+        ){
+
+            throw new Error(
+
+                "New owner user id is required."
+
+            );
+
+        }
+
+        //----------------------------------
+        // TRANSFER OWNERSHIP
+        //----------------------------------
+
+        await prisma.workspaces.update({
+
+            where:{
+
+                id:
+                workspaceId
+
+            },
+
+            data:{
+
+                owner_user_id:
+                Number(
+                    new_owner_user_id
+                )
+
+            }
+
+        });
+
+        return{
+
+            message:
+            "Workspace ownership transferred successfully."
+
+        };
+
+    }
+
+    //----------------------------------
+    // OWNER + LEAD
+    //----------------------------------
+
+    if(
+
+        options.type ===
+        "OWNER_AND_LEAD"
+
+    ){
+
+        const{
+
+            new_owner_user_id,
+
+            domain_transfers
+
+        } = data;
+
+        //----------------------------------
+        // VALIDATION
+        //----------------------------------
+
+        if(
+
+            !new_owner_user_id
+
+        ){
+
+            throw new Error(
+
+                "New owner user id is required."
+
+            );
+
+        }
+
+        if(
+
+            !domain_transfers ||
+
+            domain_transfers.length===0
+
+        ){
+
+            throw new Error(
+
+                "Domain transfers are required."
+
+            );
+
+        }
+
+        //----------------------------------
+        // CHANGE DOMAIN LEADS
+        //----------------------------------
+
+        for(
+
+            const transfer
+
+            of domain_transfers
+
+        ){
+
+            if(
+
+                !transfer.new_lead_user_id ||
+
+                !transfer.user_type
+
+            ){
+
+                throw new Error(
+
+                    `Please select a replacement lead for '${transfer.domain_name}'.`
+
+                );
+
+            }
+
+            await changeDomainLead(
+
+                transfer.domain_id,
+
+                {
+
+                    new_lead_user_id:
+                    transfer.new_lead_user_id,
+
+                    user_type:
+                    transfer.user_type,
+
+                    //----------------------------------
+                    // EXITING USER
+                    //----------------------------------
+
+                    remove_old_lead:
+                    true
+
+                }
+
+            );
+
+        }
+
+        //----------------------------------
+        // TRANSFER OWNER
+        //----------------------------------
+
+        await prisma.workspaces.update({
+
+            where:{
+
+                id:
+                workspaceId
+
+            },
+
+            data:{
+
+                owner_user_id:
+                Number(
+                    new_owner_user_id
+                )
+
+            }
+
+        });
+
+        //----------------------------------
+        // CLEANUP
+        //----------------------------------
+
+        await prisma.workspace_members.deleteMany({
+
+            where:{
+
+                workspace_id:
+                workspaceId,
+
+                user_id:
+                userId
+
+            }
+
+        });
+
+        return{
+
+            message:
+
+            "Workspace ownership and domain leadership transferred successfully."
+
+        };
+
+    }
+
+    //----------------------------------
+    // INVALID TYPE
+    //----------------------------------
+
+    throw new Error(
+
+        "Invalid exit option."
+
+    );
 
 }
 
@@ -292,12 +886,27 @@ async function getExitOptions(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
 async function getChangeLeadOptions(
-    domainId
+    domainId,
+    currentLeadUserId 
 ){
 
     domainId =
     Number(domainId);
+
+    currentLeadUserId =
+    Number(currentLeadUserId);
 
     const domain =
     await prisma.domains.findUnique({
@@ -316,9 +925,36 @@ async function getChangeLeadOptions(
 
     }
 
+    //----------------------------------
+    // Current lead domain count
+    //----------------------------------
+
+    const currentLeadDomainCount =
+    await prisma.workspace_members.count({
+
+        where:{
+
+            workspace_id:
+            domain.workspace_id,
+
+            role:
+            "LEAD",
+
+            user_id:
+            Number(
+                currentLeadUserId
+            )
+
+        }
+
+    });
+
+    //----------------------------------
+    // Developers of THIS domain
+    //----------------------------------
+
     const developers =
-    await prisma.workspace_members
-    .findMany({
+    await prisma.workspace_members.findMany({
 
         where:{
 
@@ -336,295 +972,129 @@ async function getChangeLeadOptions(
 
     });
 
+    //----------------------------------
+    // Existing Leads in other domains
+    //----------------------------------
+
+    const leads =
+(
+    await prisma.workspace_members.findMany({
+
+        where:{
+
+            workspace_id:
+            domain.workspace_id,
+
+            role:
+            "LEAD",
+
+            NOT:{
+
+                domain_id:
+                domainId
+
+            }
+
+        },
+
+        include:{
+
+            users:true,
+
+            domains:true
+
+        }
+
+    })
+
+).filter(
+
+    lead=>
+
+    Number(
+        lead.user_id
+    )
+
+    !==
+
+    Number(
+        currentLeadUserId
+    )
+
+);
+
     if(
+
         developers.length === 0
+        &&
+
+        leads.length === 0
+
     ){
 
         throw new Error(
-            "Cannot change lead. No developers available."
+
+            "No eligible users available to become lead."
+
         );
 
     }
 
-    return {
+    return{
 
-        developer_candidates:
+        current_lead:{
+
+            id:
+            currentLeadUserId,
+
+            lead_domain_count:
+            currentLeadDomainCount,
+
+            is_multi_domain_lead:
+            currentLeadDomainCount > 1
+
+        },
+
+        developers:
 
         developers.map(
 
-            developer => ({
+            developer=>({
 
                 id:
-                    Number(
-                        developer.user_id
-                    ),
+                Number(
+                    developer.user_id
+                ),
 
                 name:
                 developer.users.name
 
             })
 
+        ),
+
+        existing_leads:
+
+        leads.map(
+
+            lead=>({
+
+                id:
+                Number(
+                    lead.user_id
+                ),
+
+                name:
+                lead.users.name,
+
+                domain_name:
+                lead.domains.domain_name
+
+            })
+
         )
 
     };
-
-}
-
-
-
-async function exitWorkspace(
-    workspaceId,
-    userId,
-    data
-){
-
-    workspaceId =
-    Number(workspaceId);
-
-    userId =
-    Number(userId);
-
-    const options =
-    await getExitOptions(
-        workspaceId,
-        userId
-    );
-
-    //----------------------------------
-    // DEVELOPER
-    //----------------------------------
-
-    if(
-        options.type ===
-        "DEVELOPER"
-    ){
-
-        await prisma.workspace_members
-        .deleteMany({
-
-            where:{
-
-                workspace_id:
-                workspaceId,
-
-                user_id:
-                userId
-
-            }
-
-        });
-
-        return {
-
-            message:
-            "Exited workspace successfully"
-
-        };
-
-    }
-
-    //----------------------------------
-    // LEAD
-    //----------------------------------
-
-    if(
-        options.type ===
-        "LEAD"
-    ){
-
-        const {
-            domain_transfers
-        } = data;
-
-        if(
-            !domain_transfers ||
-            domain_transfers.length === 0
-        ){
-
-            throw new Error(
-                "Domain transfers are required"
-            );
-
-        }
-
-        for(
-            const transfer
-            of domain_transfers
-        ){
-
-            await changeDomainLead(
-
-                transfer.domain_id,
-
-                {
-
-                    new_lead_user_id:
-                    transfer.new_lead_user_id,
-
-                    remove_old_lead:
-                    true
-
-                }
-
-            );
-
-        }
-
-        return {
-
-            message:
-            "Exited workspace successfully"
-
-        };
-
-    }
-
-    //----------------------------------
-    // OWNER
-    //----------------------------------
-
-    if(
-        options.type ===
-        "OWNER"
-    ){
-
-        const {
-            new_owner_user_id
-        } = data;
-
-        if(
-            !new_owner_user_id
-        ){
-
-            throw new Error(
-                "New owner user id is required"
-            );
-
-        }
-
-        await prisma.workspaces
-        .update({
-
-            where:{
-                id:workspaceId
-            },
-
-            data:{
-
-                owner_user_id:
-                Number(
-                    new_owner_user_id
-                )
-
-            }
-
-        });
-
-        return {
-
-            message:
-            "Workspace ownership transferred successfully"
-
-        };
-
-    }
-
-    //----------------------------------
-    // OWNER + LEAD
-    //----------------------------------
-
-    if(
-        options.type ===
-        "OWNER_AND_LEAD"
-    ){
-
-        const {
-
-            new_owner_user_id,
-
-            domain_transfers
-
-        } = data;
-
-        if(
-            !new_owner_user_id
-        ){
-
-            throw new Error(
-                "New owner user id is required"
-            );
-
-        }
-
-        if(
-            !domain_transfers ||
-            domain_transfers.length === 0
-        ){
-
-            throw new Error(
-                "Domain transfers are required"
-            );
-
-        }
-
-        //----------------------------------
-        // CHANGE DOMAIN LEADS
-        //----------------------------------
-
-        for(
-            const transfer
-            of domain_transfers
-        ){
-
-            await changeDomainLead(
-
-                transfer.domain_id,
-
-                {
-
-                    new_lead_user_id:
-                    transfer.new_lead_user_id,
-
-                    remove_old_lead:
-                    true
-
-                }
-
-            );
-
-        }
-
-        //----------------------------------
-        // CHANGE OWNER
-        //----------------------------------
-
-        await prisma.workspaces
-        .update({
-
-            where:{
-                id:workspaceId
-            },
-
-            data:{
-
-                owner_user_id:
-                Number(
-                    new_owner_user_id
-                )
-
-            }
-
-        });
-
-        return {
-
-            message:
-
-            "Workspace ownership and domain leadership transferred successfully"
-
-        };
-
-    }
 
 }
 
@@ -640,16 +1110,19 @@ async function changeDomainLead(
     domainId =
     Number(domainId);
 
-    const {
+    const{
 
         new_lead_user_id,
+        user_type,
         remove_old_lead
 
     } = data;
 
-    if(
-        !new_lead_user_id
-    ){
+    //----------------------------------
+    // VALIDATION
+    //----------------------------------
+
+    if(!new_lead_user_id){
 
         throw new Error(
             "New lead user id is required"
@@ -658,19 +1131,51 @@ async function changeDomainLead(
     }
 
     if(
-        typeof remove_old_lead !==
-        "boolean"
+
+        user_type !==
+        "DEVELOPER"
+
+        &&
+
+        user_type !==
+        "LEAD"
+
     ){
 
         throw new Error(
-            "remove_old_lead must be true or false"
+            "Invalid user type"
         );
 
     }
 
+    if(
+
+        typeof remove_old_lead !==
+        "boolean"
+
+    ){
+
+        throw new Error(
+
+            "remove_old_lead must be true or false"
+
+        );
+
+    }
+    console.log("domainId before Number:", domainId);
+
+    domainId = Number(domainId);
+
+    console.log("domainId after Number:", domainId);
+    console.log("isNaN:", Number.isNaN(domainId));
+
     await prisma.$transaction(
 
         async(tx)=>{
+
+            //----------------------------------
+            // FETCH DOMAIN
+            //----------------------------------
 
             const domain =
             await tx.domains.findUnique({
@@ -695,60 +1200,37 @@ async function changeDomainLead(
             );
 
             if(
+
                 currentLeadId ===
                 Number(
                     new_lead_user_id
                 )
+
             ){
 
                 throw new Error(
+
                     "New lead cannot be the current lead"
-                );
 
-            }
-
-            const developer =
-            await tx.workspace_members
-            .findFirst({
-
-                where:{
-
-                    workspace_id:
-                    domain.workspace_id,
-
-                    domain_id:
-                    domainId,
-
-                    user_id:
-                    Number(
-                        new_lead_user_id
-                    ),
-
-                    role:
-                    "DEVELOPER"
-
-                }
-
-            });
-
-            if(!developer){
-
-                throw new Error(
-                    "Selected user must be a developer of this domain"
                 );
 
             }
 
             //----------------------------------
-            // Promote developer to LEAD
+            // NEW LEAD IS A DEVELOPER
             //----------------------------------
 
-            await tx.workspace_members
-            .update({
+            if(
 
-                where:{
+                user_type ===
+                "DEVELOPER"
 
-                    workspace_id_domain_id_user_id:{
+            ){
+
+                const developer =
+                await tx.workspace_members.findFirst({
+
+                    where:{
 
                         workspace_id:
                         domain.workspace_id,
@@ -759,26 +1241,131 @@ async function changeDomainLead(
                         user_id:
                         Number(
                             new_lead_user_id
-                        )
+                        ),
+
+                        role:
+                        "DEVELOPER"
 
                     }
 
-                },
+                });
 
-                data:{
-                    role:"LEAD"
+                if(!developer){
+
+                    throw new Error(
+
+                        "Selected user must be a developer of this domain"
+
+                    );
+
                 }
 
-            });
+                //----------------------------------
+                // PROMOTE TO LEAD
+                //----------------------------------
+
+                await tx.workspace_members.update({
+
+                    where:{
+
+                        workspace_id_domain_id_user_id:{
+
+                            workspace_id:
+                            domain.workspace_id,
+
+                            domain_id:
+                            domainId,
+
+                            user_id:
+                            Number(
+                                new_lead_user_id
+                            )
+
+                        }
+
+                    },
+
+                    data:{
+
+                        role:
+                        "LEAD"
+
+                    }
+
+                });
+
+            }
 
             //----------------------------------
-            // Remove OR Demote old lead
+            // NEW LEAD IS AN EXISTING LEAD
             //----------------------------------
 
-            if(remove_old_lead){
+            else{
 
-                await tx.workspace_members
-                .delete({
+                const lead =
+                await tx.workspace_members.findFirst({
+
+                    where:{
+
+                        workspace_id:
+                        domain.workspace_id,
+
+                        user_id:
+                        Number(
+                            new_lead_user_id
+                        ),
+
+                        role:
+                        "LEAD"
+
+                    }
+
+                });
+
+                if(!lead){
+
+                    throw new Error(
+
+                        "Selected user is not an existing lead"
+
+                    );
+
+                }
+
+                //----------------------------------
+                // ADD LEAD TO THIS DOMAIN
+                //----------------------------------
+
+                await tx.workspace_members.create({
+
+                    data:{
+
+                        workspace_id:
+                        domain.workspace_id,
+
+                        domain_id:
+                        domainId,
+
+                        user_id:
+                        Number(
+                            new_lead_user_id
+                        ),
+
+                        role:
+                        "LEAD"
+
+                    }
+
+                });
+
+            }
+
+            //----------------------------------
+            // HANDLE PREVIOUS LEAD
+            //----------------------------------
+                        if(remove_old_lead){
+
+                await tx.workspace_members.delete({
 
                     where:{
 
@@ -802,8 +1389,7 @@ async function changeDomainLead(
             }
             else{
 
-                await tx.workspace_members
-                .update({
+                await tx.workspace_members.update({
 
                     where:{
 
@@ -823,8 +1409,10 @@ async function changeDomainLead(
                     },
 
                     data:{
+
                         role:
                         "DEVELOPER"
+
                     }
 
                 });
@@ -832,7 +1420,7 @@ async function changeDomainLead(
             }
 
             //----------------------------------
-            // Update domain table
+            // UPDATE DOMAIN
             //----------------------------------
 
             await tx.domains.update({
@@ -856,15 +1444,23 @@ async function changeDomainLead(
 
     );
 
-    return {
+    //----------------------------------
+    // RESPONSE
+    //----------------------------------
+
+    return{
 
         message:
 
         remove_old_lead
 
-        ? "New domain lead assigned successfully and previous lead removed from the domain"
+        ?
 
-        : "New domain lead assigned successfully and previous lead demoted to developer"
+        "New domain lead assigned successfully and previous lead removed from the domain"
+
+        :
+
+        "New domain lead assigned successfully and previous lead demoted to developer"
 
     };
 

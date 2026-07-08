@@ -476,7 +476,7 @@ function Dashboard() {
 
             {
 
-                loading
+                    loading
 
                     ?
 
@@ -500,6 +500,91 @@ function Dashboard() {
 
                     :
 
+                    workspaces.length===0
+
+                    ?
+
+                    (
+
+                        <div
+                        className="
+                        flex
+                        flex-col
+                        items-center
+                        justify-center
+                        rounded-3xl
+                        border
+                        border-[var(--border)]
+                        bg-[var(--card-bg)]
+                        py-24
+                        px-8
+                        text-center
+                        "
+                        >
+
+                            <h2
+                            className="
+                            text-3xl
+                            font-bold
+                            text-[var(--text-primary)]
+                            "
+                            >
+
+                                No Workspaces Found
+
+                            </h2>
+
+                            <p
+                            className="
+                            mt-3
+                            text-[var(--text-secondary)]
+                            "
+                            >
+
+                                Create your first workspace to get started.
+
+                            </p>
+
+                            <button
+
+                                onClick={()=>{
+
+                                    setShowCreateModal(
+
+                                        true
+
+                                    );
+
+                                }}
+
+                                className="
+                                mt-8
+                                flex
+                                items-center
+                                gap-2
+                                rounded-2xl
+                                bg-[var(--accent-primary)]
+                                px-6
+                                py-3
+                                font-medium
+                                hover:bg-[var(--accent-hover)]
+                                transition
+                                "
+
+                            >
+
+                                <Plus size={18}/>
+
+                                Create Workspace
+
+                            </button>
+
+                        </div>
+
+                    )
+
+                    :
+
                     (
 
                         <div
@@ -516,7 +601,7 @@ function Dashboard() {
 
                                 workspaces.map(
 
-                                    workspace => (
+                                    workspace=>(
 
                                         <WorkspaceCard
 
@@ -540,7 +625,7 @@ function Dashboard() {
 
                     )
 
-            }
+                }
 
             {
 

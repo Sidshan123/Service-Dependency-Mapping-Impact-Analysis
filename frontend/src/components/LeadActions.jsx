@@ -275,12 +275,12 @@ function LeadActions({
             />
 
             )}
-                        {showManageDependenciesModal && (
+                {showManageDependenciesModal && (
 
                 <ManageDependenciesModal
                             
                     workspaceId={workspace.id}
-                
+                    refreshWorkspace={refreshWorkspace}
                     onClose={() => setShowManageDependenciesModal(false)}
                 />
 

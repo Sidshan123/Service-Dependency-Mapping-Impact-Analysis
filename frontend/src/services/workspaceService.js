@@ -222,6 +222,7 @@ export async function joinAsLead(
 //--------------------------------------------------
 
 export async function joinAsDeveloper(
+    workspaceId,
     inviteCode
 ){
 
@@ -231,6 +232,9 @@ export async function joinAsDeveloper(
         "/workspace-members/join-developer",
 
         {
+
+            workspace_id:
+            workspaceId,
 
             invite_code:
             inviteCode
@@ -474,6 +478,115 @@ export async function updateServiceName(
             service_name
 
         }
+
+    );
+
+    return response.data;
+
+}
+
+
+export async function deleteDependency(dependencyId){
+
+    const response = await api.delete(
+
+        `/dependencies/${dependencyId}`
+
+    );
+
+    return response.data;
+
+}
+
+
+
+
+export async function deleteService(
+    serviceId
+){
+
+    const response =
+        await api.delete(
+
+            `/services/${serviceId}`
+
+        );
+
+    return response.data;
+
+}
+
+
+
+
+
+export async function deleteDomain(
+    domainId
+){
+
+    const response =
+        await api.delete(
+
+            `/domains/${domainId}`
+
+        );
+
+    return response.data;
+
+}
+
+
+//--------------------------------------------------
+// GET CHANGE LEAD OPTIONS
+//--------------------------------------------------
+
+export async function getChangeLeadOptions(
+
+    domainId,
+    currentLeadUserId
+
+){
+
+    const response =
+    await api.get(
+
+        `/workspace-leave/${domainId}/change-lead-options`,
+
+        {
+
+            params:{
+
+                current_lead_user_id:
+                currentLeadUserId
+
+            }
+
+        }
+
+    );
+
+    return response.data;
+
+}
+
+
+//--------------------------------------------------
+// CHANGE DOMAIN LEAD
+//--------------------------------------------------
+
+export async function changeDomainLead(
+
+    domainId,
+    data
+
+){
+
+    const response =
+    await api.post(
+
+        `/workspace-leave/${domainId}/change-lead`,
+
+        data
 
     );
 

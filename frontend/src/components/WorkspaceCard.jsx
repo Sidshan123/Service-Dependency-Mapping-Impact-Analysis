@@ -644,21 +644,53 @@ function WorkspaceCard({
                     left-5
                     right-5
 
+                    flex
+                    items-center
+
                 "
 
             >
 
                 <p
 
+                className="
+
+                    font-mono
+
+                    text-[10px]
+
+                    uppercase
+
+                    tracking-[0.22em]
+
+                    text-[var(--text-secondary)]
+
+                    flex
+                    items-center
+
+                "
+
+            >
+
+                Created:
+
+                {" "}
+
+                {
+
+                    new Date(
+
+                        workspace.created_at
+
+                    ).toLocaleDateString()
+
+                }
+
+                <span
+
                     className="
 
-                        font-mono
-
-                        text-[10px]
-
-                        uppercase
-
-                        tracking-[0.22em]
+                        mx-4
 
                         text-[var(--text-secondary)]
 
@@ -666,35 +698,39 @@ function WorkspaceCard({
 
                 >
 
-                    Created:
+                    •
 
-                    {" "}
+                </span>
 
-                    {
+            <span
 
-                        new Date(
+                className="
 
-                            workspace
-                            .created_at
+                    text-sky-300/80
 
-                        )
+                "
 
-                        .toLocaleDateString()
+            >
 
-                    }
+                <span
 
-                    {" • "}
+                    className="
 
-                    {
+                        font-medium
 
-                        workspace
-                        .service_count || 0
+                    "
 
-                    }
+                >
 
-                    {" Services"}
+                    {workspace.service_count ?? 0}
 
-                </p>
+                </span>
+
+                {" SERVICES"}
+
+            </span>
+
+            </p>
 
             </div>
 

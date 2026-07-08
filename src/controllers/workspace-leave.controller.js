@@ -84,21 +84,20 @@ async(req,res)=>{
     try{
 
         const result =
-        await workspaceLeaveService
-        .getChangeLeadOptions(
-            req.params.id
+        await workspaceLeaveService.getChangeLeadOptions(
+
+            req.params.id,
+
+            req.query.current_lead_user_id
+
         );
 
-        return res
-        .status(200)
-        .json(result);
+        return res.status(200).json(result);
 
     }
     catch(error){
 
-        return res
-        .status(400)
-        .json({
+        return res.status(400).json({
 
             message:
             error.message
@@ -116,25 +115,37 @@ async(req,res)=>{
 
     try{
 
+            console.log("params:", req.params);
+    console.log("domainId:", req.params.domainId);
+
         const result =
-        await workspaceLeaveService
-        .changeDomainLead(
+        await workspaceLeaveService.changeDomainLead(
 
             req.params.id,
-            req.body
+
+            {
+
+                new_lead_user_id:
+                req.body.new_lead_user_id,
+
+                user_type:
+                req.body.user_type,
+
+                remove_old_lead:
+                req.body.remove_old_lead
+
+            }
 
         );
 
-        return res
-        .status(200)
-        .json(result);
+        res.status(200).json(
+            result
+        );
 
     }
     catch(error){
 
-        return res
-        .status(400)
-        .json({
+        res.status(400).json({
 
             message:
             error.message
