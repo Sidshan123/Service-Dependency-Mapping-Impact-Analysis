@@ -2,10 +2,14 @@ import {
 
     Pencil,
     Check,
-    X
+    X,
+    User,
+    LogOut,
+    ChevronDown
 
 }
 from "lucide-react";
+import toast from "react-hot-toast";
 
 import {
 
@@ -34,6 +38,14 @@ function WorkspaceHeader({
 
         isEditing,
         setIsEditing
+
+    ] = useState(false);
+
+    const [
+
+    showProfileMenu,
+
+    setShowProfileMenu
 
     ] = useState(false);
 
@@ -108,7 +120,7 @@ function WorkspaceHeader({
         }
         catch(error){
 
-            alert(
+            toast.error(
 
                 error.response
                 ?.data
@@ -442,51 +454,26 @@ function WorkspaceHeader({
 
 
                 <div
+                className="
+                    h-14
+                    w-14
+                    rounded-full
+                    border
+                    border-[var(--border)]
+                    flex
+                    items-center
+                    justify-center
+                    bg-[var(--card-bg)]
+                "
+            >
 
-                    className="
+                <User
+                    size={26}
+                    strokeWidth={2}
+                    className="text-zinc-300"
+                />
 
-                        w-14
-                        h-14
-
-                        rounded-full
-
-                        border
-                        border-[var(--border)]
-
-                        flex
-                        items-center
-                        justify-center
-
-                        bg-[var(--card-bg)]
-
-                        text-xl
-                        font-semibold
-
-                    "
-
-                >
-
-                    {
-
-                        JSON.parse(
-
-                            localStorage.getItem(
-                                "user"
-                            )
-
-                        )?.name
-
-                        ?.charAt(0)
-
-                        ?.toUpperCase()
-
-                        ||
-
-                        "U"
-
-                    }
-
-                </div>
+            </div>
 
             </div>
 

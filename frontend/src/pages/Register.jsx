@@ -6,6 +6,8 @@ import {
 }
 from "react-router-dom";
 
+import toast from "react-hot-toast";
+
 import api
 from "../services/api";
 
@@ -77,7 +79,7 @@ function Register() {
         }
         catch (error) {
 
-            alert(
+            toast.error(
 
                 error.response?.data?.message ||
 

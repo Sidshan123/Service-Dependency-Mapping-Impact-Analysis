@@ -10,12 +10,18 @@ import {
 
     X,
     Pencil,
-    Trash2,
-    Check,
-    Ban
+    Trash2
 
 }
 from "lucide-react";
+
+import toast from "react-hot-toast";
+
+import InputModal
+from "./InputModal";
+
+import ConfirmationModal
+from "./ConfirmationModal";
 
 import {
 
@@ -25,7 +31,6 @@ import {
 
 }
 from "../services/workspaceService";
-
 
 function ManageDomainsModal({
 
@@ -49,7 +54,6 @@ function ManageDomainsModal({
 
     });
 
-
     const [
 
         loading,
@@ -57,22 +61,33 @@ function ManageDomainsModal({
 
     ] = useState(true);
 
-
     const [
 
-        editingDomainId,
-        setEditingDomainId
+        selectedDomain,
+        setSelectedDomain
 
     ] = useState(null);
 
+    const [
+
+        renameModalOpen,
+        setRenameModalOpen
+
+    ] = useState(false);
 
     const [
 
-        newDomainName,
-        setNewDomainName
+        deleteModalOpen,
+        setDeleteModalOpen
 
-    ] = useState("");
+    ] = useState(false);
 
+    const [
+
+        actionLoading,
+        setActionLoading
+
+    ] = useState(false);
 
     //--------------------------------------------------
     // FETCH DOMAINS
@@ -90,214 +105,229 @@ function ManageDomainsModal({
 
     );
 
-
     async function fetchDomains(){
 
         try{
 
             const data =
+
             await getDomains(
+
                 workspaceId
+
             );
 
             setDomains(
+
                 data
+
             );
 
         }
+
         catch(error){
 
-            alert(
+            toast.error(
 
-                error.response
-                ?.data
-                ?.message
+                error.response?.data?.message ||
 
-                ||
-
-                "Failed to fetch domains"
+                "Failed to fetch domains."
 
             );
 
             onClose();
 
         }
+
         finally{
 
             setLoading(
+
                 false
+
             );
 
         }
 
     }
 
-
     //--------------------------------------------------
-    // EDIT DOMAIN
+    // OPEN RENAME MODAL
     //--------------------------------------------------
 
-     async function handleEdit(
+    function handleEdit(
+
+        domain
+
+    ){
+
+        setSelectedDomain(
+
             domain
+
+        );
+
+        setRenameModalOpen(
+
+            true
+
+        );
+
+    }
+
+    //--------------------------------------------------
+    // SAVE DOMAIN NAME
+    //--------------------------------------------------
+
+    async function handleRename(
+
+        newName
+
+    ){
+
+        if(
+
+            !selectedDomain
+
         ){
 
-            const newName =
-            prompt(
-                "Enter new domain name:",
-                domain.domain_name
-            );
-
-            if(
-
-                !newName ||
-
-                newName.trim() === "" ||
-
-                newName === domain.domain_name
-
-            ){
-
-                return;
-
-            }
-
-            try{
-
-                const response =
-                await updateDomainName(
-
-                    domain.id,
-
-                    newName.trim()
-
-                );
-
-                alert(
-
-                    response.message ||
-
-                    "Domain updated successfully."
-
-                );
-
-            }
-
-            catch(error){
-
-                console.error(
-                    "Update failed:",
-                    error
-                );
-
-                alert(
-
-                    error.response?.data?.message ||
-
-                    "Failed to update domain."
-
-                );
-
-                return;
-
-            }
-
-            try{
-
-                await fetchDomains();
-
-                if(refreshWorkspace){
-
-                    await refreshWorkspace();
-
-                }
-
-            }
-
-            catch(error){
-
-                console.error(
-                    "Refresh failed:",
-                    error
-                );
-
-            }
+            return;
 
         }
 
+        setActionLoading(
 
-    function handleSave(){
+            true
 
-        alert(
-            "Rename Domain API coming soon!"
         );
 
+        try{
 
+            const response =
 
-        setDomains(previousDomains => ({
+            await updateDomainName(
 
-            ...previousDomains,
+                selectedDomain.id,
 
-            my_domains:
-
-                previousDomains.my_domains.filter(
-
-                    domain =>
-
-                        domain.id !== id
-
-                )
-
-        }));
-
-
-        setEditingDomainId(
-            null
-        );
-
-    }
-
-
-    function handleCancel(){
-
-        setEditingDomainId(
-            null
-        );
-
-    }
-
-
-    //--------------------------------------------------
-    // DELETE
-    //--------------------------------------------------
-
-        async function handleDelete(
-            id
-        ){
-
-            const confirmed = window.confirm(
-
-                "Are you sure you want to delete this domain?"
+                newName
 
             );
 
-            if(!confirmed){
+            toast.success(
 
-                return;
+                response.message ||
 
-            }
+                "Domain updated successfully."
 
-            try{
+            );
 
-                const response =
-                    await deleteDomain(id);
+            setRenameModalOpen(
 
-                alert(
-                    response.message
-                );
+                false
 
-                await refreshWorkspace?.();
+            );
 
-                setDomains(
+            setSelectedDomain(
+
+                null
+
+            );
+
+            await fetchDomains();
+
+            await refreshWorkspace?.();
+
+        }
+
+        catch(error){
+
+            toast.error(
+
+                error.response?.data?.message ||
+
+                "Failed to update domain."
+
+            );
+
+        }
+
+        finally{
+
+            setActionLoading(
+
+                false
+
+            );
+
+        }
+
+    }
+
+    //--------------------------------------------------
+    // OPEN DELETE MODAL
+    //--------------------------------------------------
+
+    function openDeleteModal(
+
+        domain
+
+    ){
+
+        setSelectedDomain(
+
+            domain
+
+        );
+
+        setDeleteModalOpen(
+
+            true
+
+        );
+
+    }
+
+    //--------------------------------------------------
+    // DELETE DOMAIN
+    //--------------------------------------------------
+
+    async function handleDelete(){
+
+        if(
+
+            !selectedDomain
+
+        ){
+
+            return;
+
+        }
+
+        setActionLoading(
+
+            true
+
+        );
+
+        try{
+
+            const response =
+
+            await deleteDomain(
+
+                selectedDomain.id
+
+            );
+
+            toast.success(
+
+                response.message ||
+
+                "Domain deleted successfully."
+
+            );
+
+            setDomains(
 
                 previousDomains => ({
 
@@ -309,7 +339,9 @@ function ManageDomainsModal({
 
                             domain =>
 
-                                domain.id !== id
+                                domain.id !==
+
+                                selectedDomain.id
 
                         )
 
@@ -317,27 +349,52 @@ function ManageDomainsModal({
 
             );
 
-            }
-            catch(error){
+            setDeleteModalOpen(
 
-                console.error(error);
+                false
 
-                alert(
+            );
 
-                    error.response?.data?.message ||
+            setSelectedDomain(
 
-                    error.message ||
+                null
 
-                    "Failed to delete domain."
+            );
 
-                );
-
-            }
+            await refreshWorkspace?.();
 
         }
 
+        catch(error){
 
+            toast.error(
+
+                error.response?.data?.message ||
+
+                "Failed to delete domain."
+
+            );
+
+        }
+
+        finally{
+
+            setActionLoading(
+
+                false
+
+            );
+
+        }
+
+    }
+
+    //--------------------------------------------------
+    // RETURN
+    //--------------------------------------------------
     return(
+
+    <>
 
         <div
 
@@ -346,13 +403,13 @@ function ManageDomainsModal({
                 fixed
                 inset-0
 
-                bg-black/60
+                z-40
 
                 flex
                 items-center
                 justify-center
 
-                z-50
+                bg-black/60
 
             "
 
@@ -415,9 +472,10 @@ function ManageDomainsModal({
 
                         className="
 
+                            rounded-lg
                             p-2
 
-                            rounded-lg
+                            transition
 
                             hover:bg-zinc-800
 
@@ -425,15 +483,11 @@ function ManageDomainsModal({
 
                     >
 
-                        <X
-                            size={20}
-                        />
+                        <X size={20}/>
 
                     </button>
 
                 </div>
-
-                {/* CONTENT */}
 
                 {
 
@@ -487,10 +541,9 @@ function ManageDomainsModal({
 
                                     className="
 
-                                        max-w-[550px]
                                         mx-auto
-
                                         mb-3
+                                        max-w-[550px]
 
                                         text-sm
                                         font-semibold
@@ -509,7 +562,7 @@ function ManageDomainsModal({
 
                                 </h3>
 
-                        {
+                                {
 
                                     domains.my_domains.map(
 
@@ -521,350 +574,9 @@ function ManageDomainsModal({
 
                                                 className="
 
-                                                    max-w-[550px]
                                                     mx-auto
                                                     mb-4
-
-                                                    rounded-2xl
-
-                                                    border
-                                                    border-[var(--border)]
-
-                                                    bg-[var(--bg-primary)]
-
-                                                    px-6
-                                                    py-5
-
-                                                    flex
-                                                    items-center
-                                                    justify-between
-
-                                                "
-
-                                            >
-
-                                                {
-
-                                                    editingDomainId ===
-                                                    domain.id
-
-                                                    ?
-
-                                                    (
-
-                                                        <div
-
-                                                            className="
-
-                                                                flex
-                                                                items-center
-                                                                gap-3
-
-                                                                w-full
-
-                                                            "
-
-                                                        >
-
-                                                            <input
-
-                                                                value={
-                                                                    newDomainName
-                                                                }
-
-                                                                onChange={
-
-                                                                    event=>{
-
-                                                                        setNewDomainName(
-
-                                                                            event
-                                                                            .target
-                                                                            .value
-
-                                                                        );
-
-                                                                    }
-
-                                                                }
-
-                                                                className="
-
-                                                                    flex-1
-
-                                                                    px-4
-                                                                    py-2
-
-                                                                    rounded-xl
-
-                                                                    bg-zinc-900
-
-                                                                    border
-                                                                    border-cyan-500
-
-                                                                    outline-none
-
-                                                                "
-
-                                                            />
-
-                                                            <button
-
-                                                                onClick={
-                                                                    handleSave
-                                                                }
-
-                                                                className="
-
-                                                                    p-2
-
-                                                                    rounded-lg
-
-                                                                    text-green-400
-
-                                                                    hover:bg-green-500/15
-
-                                                                    transition
-
-                                                                "
-
-                                                            >
-
-                                                                <Check
-                                                                    size={20}
-                                                                />
-
-                                                            </button>
-
-                                                            <button
-
-                                                                onClick={
-                                                                    handleCancel
-                                                                }
-
-                                                                className="
-
-                                                                    p-2
-
-                                                                    rounded-lg
-
-                                                                    text-red-400
-
-                                                                    hover:bg-red-500/15
-
-                                                                    transition
-
-                                                                "
-
-                                                            >
-
-                                                                <Ban
-                                                                    size={20}
-                                                                />
-
-                                                            </button>
-
-                                                        </div>
-
-                                                    )
-
-                                                    :
-
-                                                    (
-
-                                                        <>
-
-                                                            <div>
-
-                                                                <h3
-
-                                                                    className="
-
-                                                                        text-lg
-                                                                        font-semibold
-
-                                                                    "
-
-                                                                >
-
-                                                                    {
-
-                                                                        domain
-                                                                        .domain_name
-
-                                                                    }
-
-                                                                </h3>
-
-                                                                <p
-
-                                                                    className="
-
-                                                                        text-sm
-
-                                                                        text-[var(--text-secondary)]
-
-                                                                    "
-
-                                                                >
-
-                                                                    Lead:{" "}
-
-                                                                    {
-
-                                                                        domain
-                                                                        .lead_name
-
-                                                                    }
-
-                                                                </p>
-
-                                                            </div>
-
-                                                            <div
-
-                                                                className="
-
-                                                                    flex
-                                                                    items-center
-                                                                    gap-3
-
-                                                                "
-
-                                                            >
-
-                                                                <button
-
-                                                                    onClick={()=>{
-
-                                                                        handleEdit(
-                                                                            domain
-                                                                        );
-
-                                                                    }}
-
-                                                                    className="
-
-                                                                        p-3
-
-                                                                        rounded-xl
-
-                                                                        bg-cyan-500/15
-
-                                                                        text-cyan-400
-
-                                                                        hover:bg-cyan-500/25
-
-                                                                        transition
-
-                                                                    "
-
-                                                                >
-
-                                                                    <Pencil
-                                                                        size={18}
-                                                                    />
-
-                                                                </button>
-
-                                                                <button
-
-                                                                    onClick={()=>{
-
-                                                                        handleDelete(
-                                                                            domain.id
-                                                                        );
-
-                                                                    }}
-
-                                                                    className="
-
-                                                                        p-3
-
-                                                                        rounded-xl
-
-                                                                        bg-red-500/15
-
-                                                                        text-red-400
-
-                                                                        hover:bg-red-500/25
-
-                                                                        transition
-
-                                                                    "
-
-                                                                >
-
-                                                                    <Trash2
-                                                                        size={18}
-                                                                    />
-
-                                                                </button>
-
-                                                            </div>
-
-                                                        </>
-
-                                                    )
-
-                                                }
-
-                                            </div>
-
-                                        )
-
-                                    )
-
-                                }
-
-                            </div>
-
-
-                            {/* OTHER DOMAINS */}
-
-                            <div>
-
-                                <h3
-
-                                    className="
-
-                                        max-w-[550px]
-                                        mx-auto
-
-                                        mb-3
-
-                                        text-sm
-                                        font-semibold
-
-                                        uppercase
-
-                                        tracking-wider
-
-                                        text-[var(--text-secondary)]
-
-                                    "
-
-                                >
-
-                                    Other Domains
-
-                                </h3>
-
-                                {
-
-                                    domains.other_domains.map(
-
-                                        domain=>(
-
-                                            <div
-
-                                                key={domain.id}
-
-                                                className="
-
                                                     max-w-[550px]
-                                                    mx-auto
-                                                    mb-4
 
                                                     rounded-2xl
 
@@ -899,8 +611,7 @@ function ManageDomainsModal({
 
                                                         {
 
-                                                            domain
-                                                            .domain_name
+                                                            domain.domain_name
 
                                                         }
 
@@ -910,6 +621,8 @@ function ManageDomainsModal({
 
                                                         className="
 
+                                                            mt-1
+
                                                             text-sm
 
                                                             text-[var(--text-secondary)]
@@ -918,12 +631,224 @@ function ManageDomainsModal({
 
                                                     >
 
-                                                        Lead:{" "}
+                                                        Lead:
+
+                                                        {" "}
 
                                                         {
 
-                                                            domain
-                                                            .lead_name
+                                                            domain.lead_name
+
+                                                        }
+
+                                                    </p>
+
+                                                </div>
+
+                                                <div
+
+                                                    className="
+
+                                                        flex
+                                                        items-center
+                                                        gap-3
+
+                                                    "
+
+                                                >
+
+                                                    <button
+
+                                                        onClick={()=>{
+
+                                                            handleEdit(
+
+                                                                domain
+
+                                                            );
+
+                                                        }}
+
+                                                        className="
+
+                                                            rounded-xl
+
+                                                            bg-cyan-500/15
+
+                                                            p-3
+
+                                                            text-cyan-400
+
+                                                            transition
+
+                                                            hover:bg-cyan-500/25
+
+                                                        "
+
+                                                    >
+
+                                                        <Pencil
+
+                                                            size={18}
+
+                                                        />
+
+                                                    </button>
+
+                                                    <button
+
+                                                        onClick={()=>{
+
+                                                            openDeleteModal(
+
+                                                                domain
+
+                                                            );
+
+                                                        }}
+
+                                                        className="
+
+                                                            rounded-xl
+
+                                                            bg-red-500/15
+
+                                                            p-3
+
+                                                            text-red-400
+
+                                                            transition
+
+                                                            hover:bg-red-500/25
+
+                                                        "
+
+                                                    >
+
+                                                        <Trash2
+
+                                                            size={18}
+
+                                                        />
+
+                                                    </button>
+
+                                                </div>
+
+                                            </div>
+
+                                        )
+
+                                    )
+
+                                }
+
+                            </div>
+                                                        {/* OTHER DOMAINS */}
+
+                            <div>
+
+                                <h3
+
+                                    className="
+
+                                        mx-auto
+                                        mb-3
+                                        max-w-[550px]
+
+                                        text-sm
+                                        font-semibold
+
+                                        uppercase
+
+                                        tracking-wider
+
+                                        text-[var(--text-secondary)]
+
+                                    "
+
+                                >
+
+                                    Other Domains
+
+                                </h3>
+
+                                {
+
+                                    domains.other_domains.map(
+
+                                        domain=>(
+
+                                            <div
+
+                                                key={domain.id}
+
+                                                className="
+
+                                                    mx-auto
+                                                    mb-4
+                                                    max-w-[550px]
+
+                                                    rounded-2xl
+
+                                                    border
+                                                    border-[var(--border)]
+
+                                                    bg-[var(--bg-primary)]
+
+                                                    px-6
+                                                    py-5
+
+                                                    flex
+                                                    items-center
+                                                    justify-between
+
+                                                "
+
+                                            >
+
+                                                <div>
+
+                                                    <h3
+
+                                                        className="
+
+                                                            text-lg
+                                                            font-semibold
+
+                                                        "
+
+                                                    >
+
+                                                        {
+
+                                                            domain.domain_name
+
+                                                        }
+
+                                                    </h3>
+
+                                                    <p
+
+                                                        className="
+
+                                                            mt-1
+
+                                                            text-sm
+
+                                                            text-[var(--text-secondary)]
+
+                                                        "
+
+                                                    >
+
+                                                        Lead:
+
+                                                        {" "}
+
+                                                        {
+
+                                                            domain.lead_name
 
                                                         }
 
@@ -957,16 +882,16 @@ function ManageDomainsModal({
 
                         w-full
 
-                        py-3
-
                         rounded-xl
 
                         border
                         border-[var(--border)]
 
-                        hover:bg-zinc-800
+                        py-3
 
                         transition
+
+                        hover:bg-zinc-800
 
                     "
 
@@ -980,7 +905,71 @@ function ManageDomainsModal({
 
         </div>
 
-    );
+        {/* Rename Domain */}
+
+        <InputModal
+
+            isOpen={renameModalOpen}
+
+            title="Rename Domain"
+
+            label="Domain Name"
+
+            placeholder="Enter domain name"
+
+            defaultValue={
+
+                selectedDomain?.domain_name || ""
+
+            }
+
+            confirmText="Save"
+
+            loading={actionLoading}
+
+            onConfirm={handleRename}
+
+            onCancel={()=>{
+
+                setRenameModalOpen(false);
+
+                setSelectedDomain(null);
+
+            }}
+
+        />
+
+        {/* Delete Domain */}
+
+        <ConfirmationModal
+
+            isOpen={deleteModalOpen}
+
+            title="Delete Domain"
+
+            message={`Are you sure you want to delete "${selectedDomain?.domain_name}"? This action cannot be undone.`}
+
+            confirmText="Delete"
+
+            confirmColor="red"
+
+            loading={actionLoading}
+
+            onConfirm={handleDelete}
+
+            onCancel={()=>{
+
+                setDeleteModalOpen(false);
+
+                setSelectedDomain(null);
+
+            }}
+
+        />
+
+    </>
+
+);
 
 }
 

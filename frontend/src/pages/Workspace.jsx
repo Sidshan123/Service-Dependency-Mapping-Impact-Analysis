@@ -1,101 +1,285 @@
 import {
+
     useEffect,
     useState
-} from "react";
+
+}
+from "react";
 
 import {
+
     useParams
-} from "react-router-dom";
+
+}
+from "react-router-dom";
 
 import {
+
     getWorkspaceGraph,
     generateImpactReport as generateReport
-} from "../services/workspaceService";
 
-import JoinWorkspaceCards from "../components/JoinWorkspaceCards";
-import WorkspaceHeader from "../components/WorkspaceHeader";
-import WorkspaceActions from "../components/WorkspaceActions";
-import LeadActions from "../components/LeadActions";
-import OwnerLeadActions from "../components/OwnerLeadActions";
-import DeveloperActions from "../components/DeveloperActions";
-import GraphView from "../components/GraphView";
-import ImpactSummary from "../components/ImpactSummary";
+}
+from "../services/workspaceService";
 
-function Workspace() {
+import JoinWorkspaceCards
+from "../components/JoinWorkspaceCards";
 
-    const { id } = useParams();
+import WorkspaceHeader
+from "../components/WorkspaceHeader";
 
-    const [loading, setLoading] = useState(true);
-    const [workspace, setWorkspace] = useState(null);
-    const [roles, setRoles] = useState([]);
-    const [notMember, setNotMember] = useState(false);
-    const [impactReport, setImpactReport] = useState(null);
-    const [selectedService, setSelectedService] = useState(null);
+import WorkspaceActions
+from "../components/WorkspaceActions";
 
-    useEffect(() => {
+import LeadActions
+from "../components/LeadActions";
+
+import OwnerLeadActions
+from "../components/OwnerLeadActions";
+
+import DeveloperActions
+from "../components/DeveloperActions";
+
+import GraphView
+from "../components/GraphView";
+
+import ImpactSummary
+from "../components/ImpactSummary";
+
+import toast from "react-hot-toast";
+
+function Workspace(){
+
+    const{
+
+        id
+
+    } = useParams();
+
+    //----------------------------------
+    // STATE
+    //----------------------------------
+
+    const[
+
+        loading,
+
+        setLoading
+
+    ] = useState(true);
+
+    const[
+
+        workspace,
+
+        setWorkspace
+
+    ] = useState(null);
+
+    const[
+
+        roles,
+
+        setRoles
+
+    ] = useState([]);
+
+    const[
+
+        notMember,
+
+        setNotMember
+
+    ] = useState(false);
+
+    const[
+
+        impactReport,
+
+        setImpactReport
+
+    ] = useState(null);
+
+    const[
+
+        selectedService,
+
+        setSelectedService
+
+    ] = useState(null);
+
+    //----------------------------------
+    // GRAPH HIGHLIGHT
+    //----------------------------------
+
+    const[
+
+        highlightedServices,
+
+        setHighlightedServices
+
+    ] = useState([]);
+
+    const[
+
+        highlightedEdges,
+
+        setHighlightedEdges
+
+    ] = useState([]);
+
+    //----------------------------------
+
+    useEffect(()=>{
 
         fetchWorkspace();
 
-    }, [id]);
+    },[id]);
 
-    async function fetchWorkspace() {
+    //----------------------------------
+    // FETCH WORKSPACE
+    //----------------------------------
 
-        try {
+    async function fetchWorkspace(){
+
+        try{
 
             const data =
-                await getWorkspaceGraph(id);
 
-            console.log("Workspace data:", data);
+            await getWorkspaceGraph(
 
-            setWorkspace(data);
-            setRoles(data.roles || []);
+                id
+
+            );
+
+            console.log(
+
+                "Workspace:",
+
+                data
+
+            );
+
+            setWorkspace(
+
+                data
+
+            );
+
+            setRoles(
+
+                data.roles || []
+
+            );
 
         }
-        catch (error) {
 
-            if (
+        catch(error){
 
-                error.response?.data?.message ===
+            if(
+
+                error.response?.data?.message===
+
                 "Only workspace members can view the graph"
 
-            ) {
+            ){
 
-                setNotMember(true);
+                setNotMember(
+
+                    true
+
+                );
 
             }
 
         }
-        finally {
 
-            setLoading(false);
+        finally{
+
+            setLoading(
+
+                false
+
+            );
 
         }
 
     }
 
-    async function handleGenerateImpactReport() {
+    //----------------------------------
+    // GENERATE REPORT
+    //----------------------------------
 
-        if (!selectedService) {
+    async function handleGenerateImpactReport(){
 
-            alert("Please select a service first");
+        if(
+
+            !selectedService
+
+        ){
+
+            toast.error(
+
+                "Please select a service first"
+
+            );
+
             return;
 
         }
 
-        try {
+        try{
 
             const response =
-                await generateReport(
-                    id,
-                    selectedService.id
-                );
 
-            setImpactReport(response);
+            await generateReport(
+
+                id,
+
+                Number(
+
+                    selectedService.id
+
+                )
+
+            );
+
+            console.log(
+
+                response
+
+            );
+
+            setImpactReport(
+
+                response
+
+            );
+
+            //----------------------------------
+            // HIGHLIGHT SERVICES
+            //----------------------------------
+
+            setHighlightedServices(
+
+                response.affectedServiceIds || []
+
+            );
+
+            //----------------------------------
+            // HIGHLIGHT EDGES
+            //----------------------------------
+
+            setHighlightedEdges(
+
+                response.affectedEdgeIds || []
+
+            );
 
         }
-        catch (error) {
 
-            alert(
+        catch(error){
+
+            toast.error(
 
                 error.response?.data?.message ||
 
@@ -106,12 +290,38 @@ function Workspace() {
         }
 
     }
+    function handleResetAnalysis(){
 
-    if (loading) {
+        setSelectedService(null);
 
-        return (
+        setImpactReport(null);
 
-            <div className="min-h-screen flex items-center justify-center">
+        setHighlightedServices([]);
+
+        setHighlightedEdges([]);
+
+    }
+
+    //----------------------------------
+    // LOADING
+    //----------------------------------
+
+    if(
+
+        loading
+
+    ){
+
+        return(
+
+            <div
+                className="
+                    min-h-screen
+                    flex
+                    items-center
+                    justify-center
+                "
+            >
 
                 Loading...
 
@@ -121,12 +331,22 @@ function Workspace() {
 
     }
 
-    if (notMember) {
+    //----------------------------------
+    // NOT MEMBER
+    //----------------------------------
 
-        return (
+    if(
+
+        notMember
+
+    ){
+
+        return(
 
             <JoinWorkspaceCards
+
                 workspaceId={id}
+
             />
 
         );
@@ -134,51 +354,89 @@ function Workspace() {
     }
 
     const isOwner =
-        roles.includes("OWNER");
+
+    roles.includes(
+
+        "OWNER"
+
+    );
 
     const isLead =
-        roles.includes("LEAD");
+
+    roles.includes(
+
+        "LEAD"
+
+    );
 
     const isDeveloper =
-        roles.includes("DEVELOPER");
+
+    roles.includes(
+
+        "DEVELOPER"
+
+    );
+        //----------------------------------
+    // DASHBOARD TITLE
+    //----------------------------------
 
     const dashboardTitle =
 
         isOwner && isLead
 
-            ? "Owner & Lead Dashboard"
+        ?
 
-            : isOwner
+        "Owner & Lead Dashboard"
 
-                ? "Owner Dashboard"
+        :
 
-                : isLead
+        isOwner
 
-                    ? "Lead Dashboard"
+        ?
 
-                    : "Developer Dashboard";
+        "Owner Dashboard"
+
+        :
+
+        isLead
+
+        ?
+
+        "Lead Dashboard"
+
+        :
+
+        "Developer Dashboard";
 
     const dashboardDescription =
 
         isOwner && isLead
 
-            ? "Manage your workspace, developers, services and dependencies."
+        ?
 
-            : isOwner
+        "Manage your workspace, developers, services and dependencies."
 
-                ? "Manage your workspace, leads and domains."
+        :
 
-                : isLead
+        isOwner
 
-                    ? "Manage your developers, services and dependencies."
+        ?
 
-                    : "View your services and dependencies in your workspace.";
+        "Manage your workspace, leads and domains."
 
+        :
 
-                    console.log("Route id:", id);
-                    console.log("Workspace:", workspace);
+        isLead
 
-    return (
+        ?
+
+        "Manage your developers, services and dependencies."
+
+        :
+
+        "View your services and dependencies in your workspace.";
+
+    return(
 
         <div
             className="
@@ -189,18 +447,38 @@ function Workspace() {
         >
 
             <WorkspaceHeader
+
                 roles={roles}
+
                 workspace={workspace}
+
                 setWorkspace={setWorkspace}
+
             />
 
-            <main className="px-6 py-6">
+            <main
+                className="
+                    px-6
+                    py-6
+                "
+            >
 
-                <div className="flex items-start justify-between">
+                <div
+                    className="
+                        flex
+                        items-start
+                        justify-between
+                    "
+                >
 
                     <div>
 
-                        <h1 className="text-3xl font-bold">
+                        <h1
+                            className="
+                                text-3xl
+                                font-bold
+                            "
+                        >
 
                             {dashboardTitle}
 
@@ -219,96 +497,160 @@ function Workspace() {
 
                     </div>
 
-                    {isDeveloper && !isOwner && !isLead && (
+                    {
 
-                        <DeveloperActions
-                            workspace={workspace}
-                        />
+                        isDeveloper &&
+                        !isOwner &&
+                        !isLead &&
 
-                    )}
+                        (
+
+                            <DeveloperActions
+
+                                workspace={workspace}
+
+                            />
+
+                        )
+
+                    }
 
                 </div>
 
                 {/* OWNER + LEAD */}
 
-                {isOwner && isLead && (
+                {
 
-                    <OwnerLeadActions
-                        workspace={workspace}
-                        roles={roles}
-                        refreshWorkspace={fetchWorkspace}
-                    />
+                    isOwner &&
+                    isLead &&
 
-                )}
+                    (
+
+                        <OwnerLeadActions
+
+                            workspace={workspace}
+
+                            roles={roles}
+
+                            refreshWorkspace={fetchWorkspace}
+
+                        />
+
+                    )
+
+                }
 
                 {/* OWNER */}
 
-                {isOwner && !isLead && (
+                {
 
-                    <WorkspaceActions
-                        workspace={workspace}
-                        workspaceId={id}
-                    />
+                    isOwner &&
+                    !isLead &&
 
-                )}
+                    (
+
+                        <WorkspaceActions
+
+                            workspace={workspace}
+
+                            workspaceId={id}
+
+                        />
+
+                    )
+
+                }
 
                 {/* LEAD */}
 
-                {isLead && !isOwner && (
+                {
 
-                    <LeadActions
-                        workspace={workspace}
-                        roles={roles}
-                        refreshWorkspace={fetchWorkspace}
-                    />
+                    isLead &&
+                    !isOwner &&
 
-                )}
+                    (
+
+                        <LeadActions
+
+                            workspace={workspace}
+
+                            roles={roles}
+
+                            refreshWorkspace={fetchWorkspace}
+
+                        />
+
+                    )
+
+                }
 
                 {/* DEVELOPER */}
 
-                {isDeveloper && !isOwner && !isLead && (
+                {
 
-                    <div
-                        className="
-                            mt-6
-                            px-4
-                            py-3
-                            rounded-xl
-                            border
-                            border-blue-500/20
-                            bg-blue-500/10
-                            text-blue-300
-                            text-sm
-                        "
-                    >
+                    isDeveloper &&
+                    !isOwner &&
+                    !isLead &&
 
-                        You have read-only access to this domain.
-                        Contact your domain lead for any changes.
+                    (
 
-                    </div>
+                        <div
+                            className="
+                                mt-6
+                                rounded-xl
+                                border
+                                border-blue-500/20
+                                bg-blue-500/10
+                                px-4
+                                py-3
+                                text-sm
+                                text-blue-300
+                            "
+                        >
 
-                )}
+                            You have read-only access to this domain.
+                            Contact your domain lead for any changes.
+
+                        </div>
+
+                    )
+
+                }
 
                 <div
                     className="
+                        mt-6
                         grid
                         grid-cols-[2fr_1fr]
                         gap-6
-                        mt-6
                     "
                 >
+                <GraphView
 
-                    <GraphView
-                        nodes={workspace?.nodes || []}
-                        edges={workspace?.edges || []}
-                        selectedService={selectedService}
-                        onSelectService={setSelectedService}
-                    />
+                    nodes={workspace?.nodes || []}
+
+                    edges={workspace?.edges || []}
+
+                    selectedService={selectedService}
+
+                    onSelectService={setSelectedService}
+
+                    highlightedServices={highlightedServices}
+
+                    highlightedEdges={highlightedEdges}
+
+                    onResetAnalysis={handleResetAnalysis}
+
+                />
 
                     <ImpactSummary
+
                         selectedService={selectedService}
+
                         impactReport={impactReport}
+
                         onGenerateReport={handleGenerateImpactReport}
+
                     />
 
                 </div>

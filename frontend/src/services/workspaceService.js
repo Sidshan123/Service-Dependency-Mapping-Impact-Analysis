@@ -651,3 +651,21 @@ export async function exitWorkspace(
     return response.data;
 
 }
+
+
+//--------------------------------------------------
+// DELETE ACCOUNT
+//--------------------------------------------------
+
+export async function deleteAccount(){
+
+    const response =
+    await api.delete(
+
+        "/auth/delete-account"
+
+    );
+
+    return response.data;
+
+}

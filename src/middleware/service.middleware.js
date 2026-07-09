@@ -1,6 +1,10 @@
 const prisma =
 require("../config/prisma");
 
+
+
+
+
 async function canModifyService(
     req,
     res,
@@ -14,6 +18,10 @@ async function canModifyService(
 
         const userId =
         req.user.userId;
+
+        //----------------------------------
+        // GET SERVICE
+        //----------------------------------
 
         const service =
         await prisma.services.findUnique({
@@ -45,26 +53,47 @@ async function canModifyService(
 
         }
 
-        const member =
-        await prisma.workspace_members
-        .findFirst({
+        //----------------------------------
+        // GET DOMAIN
+        //----------------------------------
+
+        const domain =
+        await prisma.domains.findUnique({
 
             where:{
 
-                domain_id:
-                Number(service.domain_id),
-
-                user_id:
-                Number(userId),
-
-                role:
-                "LEAD"
+                id:Number(
+                    service.domain_id
+                )
 
             }
 
         });
 
-        if(!member){
+        if(!domain){
+
+            return res
+            .status(404)
+            .json({
+
+                message:
+                "Domain not found"
+
+            });
+
+        }
+
+        //----------------------------------
+        // CHECK DOMAIN LEAD
+        //----------------------------------
+
+        if(
+
+            Number(
+                domain.lead_user_id
+            )!==Number(userId)
+
+        ){
 
             return res
             .status(403)
@@ -77,7 +106,7 @@ async function canModifyService(
 
         }
 
-        return next();
+        next();
 
     }
 
@@ -98,6 +127,8 @@ async function canModifyService(
 
 
 
+
+
 async function canCreateService(
     req,
     res,
@@ -106,30 +137,59 @@ async function canCreateService(
 
     try{
 
-        const {
+        const{
 
             domain_id
 
         } = req.body;
 
-        const member =
-        await prisma.workspace_members.findFirst({
+        //----------------------------------
+        // GET DOMAIN
+        //----------------------------------
+
+        const domain =
+        await prisma.domains.findUnique({
 
             where:{
 
-                domain_id:Number(domain_id),
-
-                user_id:Number(req.user.userId),
-
-                role:"LEAD"
+                id:Number(
+                    domain_id
+                )
 
             }
 
         });
 
-        if(!member){
+        if(!domain){
 
-            return res.status(403).json({
+            return res
+            .status(404)
+            .json({
+
+                message:
+                "Domain not found"
+
+            });
+
+        }
+
+        //----------------------------------
+        // CHECK DOMAIN LEAD
+        //----------------------------------
+
+        if(
+
+            Number(
+                domain.lead_user_id
+            )!==Number(
+                req.user.userId
+            )
+
+        ){
+
+            return res
+            .status(403)
+            .json({
 
                 message:
                 "Only the domain lead can create services."
@@ -144,9 +204,12 @@ async function canCreateService(
 
     catch(error){
 
-        return res.status(500).json({
+        return res
+        .status(500)
+        .json({
 
-            message:error.message
+            message:
+            error.message
 
         });
 
@@ -154,7 +217,11 @@ async function canCreateService(
 
 }
 
-module.exports = {
+
+
+
+
+module.exports={
 
     canModifyService,
     canCreateService

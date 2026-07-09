@@ -50,3 +50,31 @@ exports.login = async (req, res) => {
 };
 
 
+
+exports.deleteAccount =
+async (req, res) => {
+
+    try{
+
+        const result =
+        await authService.deleteAccount(
+
+            req.user.userId
+
+        );
+
+        res.status(200).json(result);
+
+    }
+    catch(error){
+
+        res.status(400).json({
+
+            message:error.message
+
+        });
+
+    }
+
+};
+

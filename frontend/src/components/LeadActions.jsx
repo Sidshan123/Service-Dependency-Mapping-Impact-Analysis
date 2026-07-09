@@ -16,6 +16,8 @@ import {
     cloneWorkspace
 } from "../services/workspaceService";
 
+import toast from "react-hot-toast";
+
 import CreateDomainModal from "./CreateDomainModal";
 import InviteDeveloperModal from "./InviteDeveloperModal";
 import ManageDevelopersModal from "./ManageDevelopersModal";
@@ -127,14 +129,14 @@ function LeadActions({
 
             }
 
-            alert(
+            toast.success(
                 response.message
             );
 
         }
         catch(error){
 
-            alert(
+            toast.error(
 
                 error.response?.data?.message ||
 

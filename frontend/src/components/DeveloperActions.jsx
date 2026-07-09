@@ -9,6 +9,8 @@ import {
 }
 from "lucide-react";
 
+import toast from "react-hot-toast";
+
 import {
 
     cloneWorkspace
@@ -79,7 +81,7 @@ function DeveloperActions({
 
             }
 
-            alert(
+            toast.success(
 
                 response.message
 
@@ -88,7 +90,7 @@ function DeveloperActions({
         }
         catch(error){
 
-            alert(
+            toast.error(
 
                 error.response?.data?.message ||
 

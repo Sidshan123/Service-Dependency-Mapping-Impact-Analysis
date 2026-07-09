@@ -1,6 +1,10 @@
 const prisma =
 require("../config/prisma");
 
+
+
+
+
 async function canManageDependency(
     req,
     res,
@@ -9,7 +13,7 @@ async function canManageDependency(
 
     try{
 
-        const {
+        const{
 
             source_service_id,
             target_service_id
@@ -19,13 +23,19 @@ async function canManageDependency(
         const userId =
         req.user.userId;
 
+        //----------------------------------
+        // GET SERVICES
+        //----------------------------------
+
         const sourceService =
         await prisma.services.findUnique({
 
             where:{
+
                 id:Number(
                     source_service_id
                 )
+
             }
 
         });
@@ -34,9 +44,11 @@ async function canManageDependency(
         await prisma.services.findUnique({
 
             where:{
+
                 id:Number(
                     target_service_id
                 )
+
             }
 
         });
@@ -57,37 +69,69 @@ async function canManageDependency(
 
         }
 
-        const leadMembership =
-        await prisma.workspace_members
-        .findFirst({
+        //----------------------------------
+        // GET DOMAINS
+        //----------------------------------
+
+        const sourceDomain =
+        await prisma.domains.findUnique({
 
             where:{
 
-                user_id:
-                userId,
-
-                role:
-                "LEAD",
-
-                OR:[
-
-                    {
-                        domain_id:
-                        sourceService.domain_id
-                    },
-
-                    {
-                        domain_id:
-                        targetService.domain_id
-                    }
-
-                ]
+                id:Number(
+                    sourceService.domain_id
+                )
 
             }
 
         });
 
-        if(!leadMembership){
+        const targetDomain =
+        await prisma.domains.findUnique({
+
+            where:{
+
+                id:Number(
+                    targetService.domain_id
+                )
+
+            }
+
+        });
+
+        if(
+            !sourceDomain ||
+            !targetDomain
+        ){
+
+            return res
+            .status(404)
+            .json({
+
+                message:
+                "Domain not found"
+
+            });
+
+        }
+
+        //----------------------------------
+        // CHECK DOMAIN LEAD
+        //----------------------------------
+
+        const hasPermission =
+
+            Number(
+                sourceDomain.lead_user_id
+            )===Number(userId)
+
+            ||
+
+            Number(
+                targetDomain.lead_user_id
+            )===Number(userId);
+
+        if(!hasPermission){
 
             return res
             .status(403)
@@ -103,14 +147,14 @@ async function canManageDependency(
         next();
 
     }
+
     catch(error){
 
         return res
         .status(500)
         .json({
 
-            message:
-            error.message
+            message:error.message
 
         });
 
@@ -143,11 +187,12 @@ async function canDeleteDependency(
         //----------------------------------
 
         const dependency =
-        await prisma.dependencies
-        .findUnique({
+        await prisma.dependencies.findUnique({
 
             where:{
+
                 id:dependencyId
+
             }
 
         });
@@ -166,37 +211,29 @@ async function canDeleteDependency(
         }
 
         //----------------------------------
-        // GET SOURCE SERVICE
+        // GET SERVICES
         //----------------------------------
 
         const sourceService =
-        await prisma.services
-        .findUnique({
+        await prisma.services.findUnique({
 
             where:{
 
                 id:Number(
-                    dependency
-                    .source_service_id
+                    dependency.source_service_id
                 )
 
             }
 
         });
 
-        //----------------------------------
-        // GET TARGET SERVICE
-        //----------------------------------
-
         const targetService =
-        await prisma.services
-        .findUnique({
+        await prisma.services.findUnique({
 
             where:{
 
                 id:Number(
-                    dependency
-                    .target_service_id
+                    dependency.target_service_id
                 )
 
             }
@@ -220,40 +257,68 @@ async function canDeleteDependency(
         }
 
         //----------------------------------
-        // CHECK LEAD ACCESS
+        // GET DOMAINS
         //----------------------------------
 
-        const leadAccess =
-        await prisma.workspace_members
-        .findFirst({
+        const sourceDomain =
+        await prisma.domains.findUnique({
 
             where:{
 
-                user_id:userId,
-
-                role:"LEAD",
-
-                OR:[
-
-                    {
-                        domain_id:
-                        sourceService
-                        .domain_id
-                    },
-
-                    {
-                        domain_id:
-                        targetService
-                        .domain_id
-                    }
-
-                ]
+                id:Number(
+                    sourceService.domain_id
+                )
 
             }
 
         });
 
-        if(!leadAccess){
+        const targetDomain =
+        await prisma.domains.findUnique({
+
+            where:{
+
+                id:Number(
+                    targetService.domain_id
+                )
+
+            }
+
+        });
+
+        if(
+            !sourceDomain ||
+            !targetDomain
+        ){
+
+            return res
+            .status(404)
+            .json({
+
+                message:
+                "Domain not found"
+
+            });
+
+        }
+
+        //----------------------------------
+        // CHECK DOMAIN LEAD
+        //----------------------------------
+
+        const hasPermission =
+
+            Number(
+                sourceDomain.lead_user_id
+            )===Number(userId)
+
+            ||
+
+            Number(
+                targetDomain.lead_user_id
+            )===Number(userId);
+
+        if(!hasPermission){
 
             return res
             .status(403)
@@ -269,14 +334,14 @@ async function canDeleteDependency(
         next();
 
     }
+
     catch(error){
 
         return res
         .status(500)
         .json({
 
-            message:
-            error.message
+            message:error.message
 
         });
 
@@ -288,7 +353,9 @@ async function canDeleteDependency(
 
 
 
-module.exports = {
+module.exports={
+
     canManageDependency,
     canDeleteDependency
+
 };

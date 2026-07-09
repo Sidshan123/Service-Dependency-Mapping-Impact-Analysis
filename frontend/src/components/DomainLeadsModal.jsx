@@ -6,6 +6,9 @@ import {
 }
 from "react";
 
+
+import toast from "react-hot-toast";
+
 import {
 
     X,
@@ -150,7 +153,7 @@ function DomainLeadsModal({
         }
         catch(error){
 
-            alert(
+            toast.error(
 
                 error.response?.data?.message ||
 
@@ -293,7 +296,7 @@ function DomainLeadsModal({
         }
         catch(error){
 
-            alert(
+            toast.error(
 
                 error.response?.data?.message ||
 
@@ -371,11 +374,15 @@ function DomainLeadsModal({
 
         ){
 
-            alert(
+            toast.error(
+
+                error.response?.data?.message ||
 
                 "Please select a user."
 
             );
+
+            
 
             return;
 
@@ -408,7 +415,7 @@ function DomainLeadsModal({
 
             );
 
-            alert(
+            toast.success(
                 response.message
             );
 
@@ -447,7 +454,7 @@ function DomainLeadsModal({
         }
         catch(error){
 
-            alert(
+            toast.error(
 
                 error.response?.data?.message ||
 

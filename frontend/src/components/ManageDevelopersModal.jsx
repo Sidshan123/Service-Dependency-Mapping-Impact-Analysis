@@ -14,6 +14,11 @@ import {
 }
 from "lucide-react";
 
+import toast from "react-hot-toast";
+
+import ConfirmationModal
+from "./ConfirmationModal";
+
 import {
 
     getMyDevelopers,
@@ -22,16 +27,12 @@ import {
 }
 from "../services/workspaceService";
 
-
 function ManageDevelopersModal({
 
     workspaceId,
     onClose
 
 }){
-    console.log("ManageDevelopersModal props:", {
-    workspaceId
-});
 
     const [
 
@@ -47,6 +48,30 @@ function ManageDevelopersModal({
 
     ] = useState(true);
 
+    const [
+
+        selectedDeveloper,
+        setSelectedDeveloper
+
+    ] = useState(null);
+
+    const [
+
+        removeModalOpen,
+        setRemoveModalOpen
+
+    ] = useState(false);
+
+    const [
+
+        actionLoading,
+        setActionLoading
+
+    ] = useState(false);
+
+    //--------------------------------------------------
+    // LOAD DEVELOPERS
+    //--------------------------------------------------
 
     useEffect(()=>{
 
@@ -54,55 +79,109 @@ function ManageDevelopersModal({
 
     },[]);
 
-
     async function loadDevelopers(){
-         console.log("workspaceId =", workspaceId);
 
         try{
 
-            const response = await getMyDevelopers(
+            const response =
+
+            await getMyDevelopers(
+
                 workspaceId
+
             );
 
-            setDevelopers(response);
+            setDevelopers(
+
+                response
+
+            );
 
         }
 
         catch(error){
 
-            console.error(error);
+            toast.error(
 
-            alert(
+                error.response?.data?.message ||
+
                 "Failed to load developers."
+
             );
 
         }
 
         finally{
 
-            setLoading(false);
+            setLoading(
+
+                false
+
+            );
 
         }
 
     }
 
+    //--------------------------------------------------
+    // OPEN REMOVE MODAL
+    //--------------------------------------------------
 
-    async function handleRemove(
-    developerId
+    function openRemoveModal(
+
+        developer
+
     ){
+
+        setSelectedDeveloper(
+
+            developer
+
+        );
+
+        setRemoveModalOpen(
+
+            true
+
+        );
+
+    }
+
+    //--------------------------------------------------
+    // REMOVE DEVELOPER
+    //--------------------------------------------------
+
+    async function handleRemove(){
+
+        if(
+
+            !selectedDeveloper
+
+        ){
+
+            return;
+
+        }
+
+        setActionLoading(
+
+            true
+
+        );
 
         try{
 
             const response =
+
             await removeDeveloper(
 
                 workspaceId,
 
-                developerId
+                selectedDeveloper.id
 
             );
 
-            alert(
+            toast.success(
 
                 response.message ||
 
@@ -110,13 +189,39 @@ function ManageDevelopersModal({
 
             );
 
-            await loadDevelopers();
+            setDevelopers(
+
+                previousDevelopers=>
+
+                    previousDevelopers.filter(
+
+                        developer=>
+
+                            developer.id !==
+
+                            selectedDeveloper.id
+
+                    )
+
+            );
+
+            setRemoveModalOpen(
+
+                false
+
+            );
+
+            setSelectedDeveloper(
+
+                null
+
+            );
 
         }
 
         catch(error){
 
-            alert(
+            toast.error(
 
                 error.response?.data?.message ||
 
@@ -126,10 +231,24 @@ function ManageDevelopersModal({
 
         }
 
+        finally{
+
+            setActionLoading(
+
+                false
+
+            );
+
+        }
+
     }
 
-
+    //--------------------------------------------------
+    // RETURN
+    //--------------------------------------------------
     return(
+
+    <>
 
         <div
 
@@ -172,6 +291,8 @@ function ManageDevelopersModal({
 
             >
 
+                {/* HEADER */}
+
                 <div
 
                     className="
@@ -205,8 +326,11 @@ function ManageDevelopersModal({
 
                         className="
 
-                            p-2
                             rounded-lg
+
+                            p-2
+
+                            transition
 
                             hover:bg-zinc-800
 
@@ -219,7 +343,6 @@ function ManageDevelopersModal({
                     </button>
 
                 </div>
-
 
                 <div
 
@@ -234,11 +357,25 @@ function ManageDevelopersModal({
 
                     {
 
-                        loading ?
+                        loading
+
+                        ?
 
                         (
 
-                            <p>
+                            <p
+
+                                className="
+
+                                    py-12
+
+                                    text-center
+
+                                    text-[var(--text-secondary)]
+
+                                "
+
+                            >
 
                                 Loading...
 
@@ -248,11 +385,25 @@ function ManageDevelopersModal({
 
                         :
 
-                        developers.length===0 ?
+                        developers.length===0
+
+                        ?
 
                         (
 
-                            <p>
+                            <p
+
+                                className="
+
+                                    py-12
+
+                                    text-center
+
+                                    text-[var(--text-secondary)]
+
+                                "
+
+                            >
 
                                 No developers found.
 
@@ -272,8 +423,14 @@ function ManageDevelopersModal({
 
                                     className="
 
-                                        max-w-[550px]
                                         mx-auto
+
+                                        flex
+
+                                        max-w-[550px]
+
+                                        items-center
+                                        justify-between
 
                                         rounded-2xl
 
@@ -284,10 +441,6 @@ function ManageDevelopersModal({
 
                                         px-6
                                         py-5
-
-                                        flex
-                                        items-center
-                                        justify-between
 
                                     "
 
@@ -300,19 +453,26 @@ function ManageDevelopersModal({
                                             className="
 
                                                 text-lg
+
                                                 font-semibold
 
                                             "
 
                                         >
 
-                                            {developer.name}
+                                            {
+
+                                                developer.name
+
+                                            }
 
                                         </h3>
 
                                         <p
 
                                             className="
+
+                                                mt-1
 
                                                 text-sm
 
@@ -322,39 +482,50 @@ function ManageDevelopersModal({
 
                                         >
 
-                                            Domain: {developer.domain}
+                                            Domain:
+
+                                            {" "}
+
+                                            {
+
+                                                developer.domain
+
+                                            }
 
                                         </p>
 
                                     </div>
 
-
                                     <button
 
-                                        onClick={()=>
+                                        onClick={()=>{
 
-                                            handleRemove(
+                                            openRemoveModal(
 
-                                                developer.id
+                                                developer
 
-                                            )
+                                            );
 
-                                        }
+                                        }}
 
                                         className="
 
                                             flex
-                                            items-center
-                                            gap-2
 
-                                            px-4
-                                            py-2
+                                            items-center
+
+                                            gap-2
 
                                             rounded-xl
 
                                             bg-red-500/15
 
+                                            px-4
+                                            py-2
+
                                             text-red-400
+
+                                            transition
 
                                             hover:bg-red-500/25
 
@@ -362,7 +533,11 @@ function ManageDevelopersModal({
 
                                     >
 
-                                        <Trash2 size={18}/>
+                                        <Trash2
+
+                                            size={18}
+
+                                        />
 
                                         Remove
 
@@ -378,7 +553,6 @@ function ManageDevelopersModal({
 
                 </div>
 
-
                 <button
 
                     onClick={onClose}
@@ -389,12 +563,14 @@ function ManageDevelopersModal({
 
                         w-full
 
-                        py-3
-
                         rounded-xl
 
                         border
                         border-[var(--border)]
+
+                        py-3
+
+                        transition
 
                         hover:bg-zinc-800
 
@@ -410,7 +586,35 @@ function ManageDevelopersModal({
 
         </div>
 
-    );
+        <ConfirmationModal
+
+            isOpen={removeModalOpen}
+
+            title="Remove Developer"
+
+            message={`Are you sure you want to remove "${selectedDeveloper?.name}" from this domain?`}
+
+            confirmText="Remove"
+
+            confirmColor="red"
+
+            loading={actionLoading}
+
+            onConfirm={handleRemove}
+
+            onCancel={()=>{
+
+                setRemoveModalOpen(false);
+
+                setSelectedDeveloper(null);
+
+            }}
+
+        />
+
+    </>
+
+);
 
 }
 

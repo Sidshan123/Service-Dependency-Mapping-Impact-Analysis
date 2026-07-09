@@ -15,6 +15,14 @@ import {
 }
 from "lucide-react";
 
+import toast from "react-hot-toast";
+
+import InputModal
+from "./InputModal";
+
+import ConfirmationModal
+from "./ConfirmationModal";
+
 import {
 
     getWorkspaceServices,
@@ -23,7 +31,6 @@ import {
 
 }
 from "../services/workspaceService";
-
 
 function ManageServicesModal({
 
@@ -54,6 +61,37 @@ function ManageServicesModal({
 
     ] = useState(true);
 
+    const [
+
+        selectedService,
+        setSelectedService
+
+    ] = useState(null);
+
+    const [
+
+        renameModalOpen,
+        setRenameModalOpen
+
+    ] = useState(false);
+
+    const [
+
+        deleteModalOpen,
+        setDeleteModalOpen
+
+    ] = useState(false);
+
+    const [
+
+        actionLoading,
+        setActionLoading
+
+    ] = useState(false);
+
+    //--------------------------------------------------
+    // LOAD SERVICES
+    //--------------------------------------------------
 
     useEffect(()=>{
 
@@ -61,179 +99,294 @@ function ManageServicesModal({
 
     },[]);
 
-
     async function loadServices(){
 
         try{
 
             const response =
+
             await getWorkspaceServices(
+
                 workspaceId
+
             );
 
             setMyServices(
+
                 response.my_services
+
             );
 
             setOtherServices(
+
                 response.other_services
+
             );
 
         }
 
         catch(error){
 
-            console.error(error);
+            toast.error(
 
-            alert(
+                error.response?.data?.message ||
+
                 "Failed to load services."
+
             );
 
         }
 
         finally{
 
-            setLoading(false);
+            setLoading(
+
+                false
+
+            );
 
         }
 
     }
 
+    //--------------------------------------------------
+    // OPEN RENAME MODAL
+    //--------------------------------------------------
 
-    async function handleEdit(
-    service
+    function openRenameModal(
+
+        service
+
+    ){
+
+        setSelectedService(
+
+            service
+
+        );
+
+        setRenameModalOpen(
+
+            true
+
+        );
+
+    }
+
+    //--------------------------------------------------
+    // RENAME SERVICE
+    //--------------------------------------------------
+
+    async function handleRename(
+
+        newName
+
+    ){
+
+        if(
+
+            !selectedService
+
         ){
 
-            const newName =
-            prompt(
-
-                "Enter new service name:",
-
-                service.service_name
-
-            );
-
-            if(
-
-                !newName ||
-
-                newName.trim() === "" ||
-
-                newName === service.service_name
-
-            ){
-
-                return;
-
-            }
-
-            try{
-
-                const response =
-                await updateServiceName(
-
-                    service.id,
-
-                    newName.trim()
-
-                );
-
-                alert(
-
-                    response.message ||
-
-                    "Service updated successfully."
-
-                );
-
-                if(refreshWorkspace){
-
-                    await refreshWorkspace();
-
-                }
-                onClose();
-
-            }
-
-            catch(error){
-
-                alert(
-
-                    error.response?.data?.message ||
-
-                    "Failed to update service."
-
-                );
-
-            }
+            return;
 
         }
 
+        setActionLoading(
 
+            true
 
-        async function handleDelete(
-            id
-        ){
+        );
 
-            const confirmed = window.confirm(
+        try{
 
-                "Are you sure you want to delete this service?"
+            const response =
+
+            await updateServiceName(
+
+                selectedService.id,
+
+                newName
 
             );
 
-            if(!confirmed){
+            toast.success(
 
-                return;
+                response.message ||
 
-            }
+                "Service updated successfully."
 
-            try{
+            );
 
-                const response =
-                    await deleteService(id);
+            await refreshWorkspace?.();
 
-                alert(
-                    response.message
-                );
+            await loadServices();
 
-                await refreshWorkspace?.();
+            setRenameModalOpen(
 
-                setMyServices(
+                false
 
-                    previousServices =>
+            );
 
-                        previousServices.filter(
+            setSelectedService(
 
-                            service =>
+                null
 
-                                service.id !== id
-
-                        )
-
-                );
-
-            }
-            catch(error){
-
-                console.error(error);
-
-                alert(
-
-                    error.response?.data?.message ||
-
-                    error.message ||
-
-                    "Failed to delete service."
-
-                );
-
-            }
+            );
 
         }
-    
 
+        catch(error){
 
+            toast.error(
+
+                error.response?.data?.message ||
+
+                "Failed to update service."
+
+            );
+
+        }
+
+        finally{
+
+            setActionLoading(
+
+                false
+
+            );
+
+        }
+
+    }
+
+    //--------------------------------------------------
+    // OPEN DELETE MODAL
+    //--------------------------------------------------
+
+    function openDeleteModal(
+
+        service
+
+    ){
+
+        setSelectedService(
+
+            service
+
+        );
+
+        setDeleteModalOpen(
+
+            true
+
+        );
+
+    }
+
+    //--------------------------------------------------
+    // DELETE SERVICE
+    //--------------------------------------------------
+
+    async function handleDelete(){
+
+        if(
+
+            !selectedService
+
+        ){
+
+            return;
+
+        }
+
+        setActionLoading(
+
+            true
+
+        );
+
+        try{
+
+            const response =
+
+            await deleteService(
+
+                selectedService.id
+
+            );
+
+            toast.success(
+
+                response.message ||
+
+                "Service deleted successfully."
+
+            );
+
+            setMyServices(
+
+                previousServices=>
+
+                    previousServices.filter(
+
+                        service=>
+
+                            service.id !==
+
+                            selectedService.id
+
+                    )
+
+            );
+
+            await refreshWorkspace?.();
+
+            setDeleteModalOpen(
+
+                false
+
+            );
+
+            setSelectedService(
+
+                null
+
+            );
+
+        }
+
+        catch(error){
+
+            toast.error(
+
+                error.response?.data?.message ||
+
+                "Failed to delete service."
+
+            );
+
+        }
+
+        finally{
+
+            setActionLoading(
+
+                false
+
+            );
+
+        }
+
+    }
+
+    //--------------------------------------------------
+    // RETURN
+    //--------------------------------------------------
     return(
+
+    <>
 
         <div
 
@@ -311,8 +464,11 @@ function ManageServicesModal({
 
                         className="
 
-                            p-2
                             rounded-lg
+
+                            p-2
+
+                            transition
 
                             hover:bg-zinc-800
 
@@ -325,7 +481,6 @@ function ManageServicesModal({
                     </button>
 
                 </div>
-
 
                 <div
 
@@ -340,367 +495,382 @@ function ManageServicesModal({
 
                     {
 
-                            loading ?
+                        loading
 
-                            (
+                        ?
 
-                                <p>
+                        (
 
-                                    Loading...
+                            <p
 
-                                </p>
+                                className="
 
-                            )
+                                    py-12
 
-                            :
+                                    text-center
 
-                            myServices.length===0 &&
+                                    text-[var(--text-secondary)]
 
-                            otherServices.length===0 ?
+                                "
 
-                            (
+                            >
 
-                                <p>
+                                Loading...
 
-                                    No services found.
+                            </p>
 
-                                </p>
+                        )
 
-                            )
+                        :
 
-                            :
+                        myServices.length===0 &&
 
-                            <>
+                        otherServices.length===0
 
-                                {/* MY SERVICES */}
+                        ?
 
-                                {
+                        (
 
-                                    myServices.length>0 &&
+                            <p
 
-                                    <>
+                                className="
 
-                                        <h3
+                                    py-12
 
-                                            className="
+                                    text-center
 
-                                                max-w-[550px]
-                                                mx-auto
+                                    text-[var(--text-secondary)]
 
-                                                mb-3
+                                "
 
-                                                text-sm
-                                                font-semibold
+                            >
 
-                                                uppercase
+                                No services found.
 
-                                                tracking-wider
+                            </p>
 
-                                                text-[var(--text-secondary)]
+                        )
 
-                                            "
+                        :
 
-                                        >
+                        <>
 
-                                            My Services
+                            {/* MY SERVICES */}
 
-                                        </h3>
+                            {
 
-                                        {
+                                myServices.length>0
 
-                                            myServices.map(
+                                &&
 
-                                                service=>(
+                                <>
 
-                                                    <div
+                                    <h3
 
-                                                        key={service.id}
+                                        className="
 
-                                                        className="
+                                            mx-auto
 
-                                                            max-w-[550px]
-                                                            mx-auto
+                                            mb-3
 
-                                                            rounded-2xl
+                                            max-w-[550px]
 
-                                                            border
-                                                            border-[var(--border)]
+                                            text-sm
+                                            font-semibold
 
-                                                            bg-[var(--bg-primary)]
+                                            uppercase
 
-                                                            px-6
-                                                            py-5
+                                            tracking-wider
 
-                                                            mb-4
+                                            text-[var(--text-secondary)]
 
-                                                            flex
-                                                            items-center
-                                                            justify-between
+                                        "
 
-                                                        "
+                                    >
 
-                                                    >
+                                        My Services
 
-                                                        <div>
+                                    </h3>
 
-                                                            <h3
+                                    {
 
-                                                                className="
+                                        myServices.map(
 
-                                                                    text-lg
-                                                                    font-semibold
+                                            service=>(
 
-                                                                "
+                                                <div
 
-                                                            >
+                                                    key={service.id}
 
-                                                                {
+                                                    className="
 
-                                                                    service
-                                                                    .service_name
+                                                        mx-auto
 
-                                                                }
+                                                        mb-4
 
-                                                            </h3>
+                                                        flex
 
-                                                            <p
+                                                        max-w-[550px]
 
-                                                                className="
+                                                        items-center
 
-                                                                    text-sm
+                                                        justify-between
 
-                                                                    text-[var(--text-secondary)]
+                                                        rounded-2xl
 
-                                                                "
+                                                        border
+                                                        border-[var(--border)]
 
-                                                            >
+                                                        bg-[var(--bg-primary)]
 
-                                                                
+                                                        px-6
+                                                        py-5
 
-                                                            </p>
+                                                    "
 
-                                                        </div>
+                                                >
 
-                                                        <div
+                                                    <div>
+
+                                                        <h3
 
                                                             className="
 
-                                                                flex
-                                                                gap-3
+                                                                text-lg
+
+                                                                font-semibold
 
                                                             "
 
                                                         >
 
-                                                            <button
+                                                            {
 
-                                                                onClick={()=>{
+                                                                service.service_name
 
-                                                                    handleEdit(
+                                                            }
 
-                                                                        service
-
-                                                                    );
-
-                                                                }}
-
-                                                                className="
-
-                                                                    p-3
-
-                                                                    rounded-xl
-
-                                                                    bg-cyan-500/15
-
-                                                                    text-cyan-400
-
-                                                                    hover:bg-cyan-500/25
-
-                                                                "
-
-                                                            >
-
-                                                                <Pencil
-                                                                    size={18}
-                                                                />
-
-                                                            </button>
-
-                                                            <button
-
-                                                                onClick={()=>{
-
-                                                                    handleDelete(
-
-                                                                        service.id
-
-                                                                    );
-
-                                                                }}
-
-                                                                className="
-
-                                                                    p-3
-
-                                                                    rounded-xl
-
-                                                                    bg-red-500/15
-
-                                                                    text-red-400
-
-                                                                    hover:bg-red-500/25
-
-                                                                "
-
-                                                            >
-
-                                                                <Trash2
-                                                                    size={18}
-                                                                />
-
-                                                            </button>
-
-                                                        </div>
+                                                        </h3>
 
                                                     </div>
 
-                                                )
-
-                                            )
-
-                                        }
-
-                                    </>
-
-                                }
-
-
-                                {/* OTHER SERVICES */}
-
-                                {
-
-                                    otherServices.length>0 &&
-
-                                    <>
-
-                                        <h3
-
-                                            className="
-
-                                                max-w-[550px]
-                                                mx-auto
-
-                                                mt-6
-                                                mb-3
-
-                                                text-sm
-                                                font-semibold
-
-                                                uppercase
-
-                                                tracking-wider
-
-                                                text-[var(--text-secondary)]
-
-                                            "
-
-                                        >
-
-                                            Other Services
-
-                                        </h3>
-
-                                        {
-
-                                            otherServices.map(
-
-                                                service=>(
-
                                                     <div
-
-                                                        key={service.id}
 
                                                         className="
 
-                                                            max-w-[550px]
-                                                            mx-auto
-
-                                                            rounded-2xl
-
-                                                            border
-                                                            border-[var(--border)]
-
-                                                            bg-[var(--bg-primary)]
-
-                                                            px-6
-                                                            py-5
-
-                                                            mb-4
-
                                                             flex
-                                                            items-center
-                                                            justify-between
+
+                                                            gap-3
 
                                                         "
 
                                                     >
 
-                                                        <div>
+                                                        <button
 
-                                                            <h3
+                                                            onClick={()=>{
 
-                                                                className="
-
-                                                                    text-lg
-                                                                    font-semibold
-
-                                                                "
-
-                                                            >
-
-                                                                {
+                                                                openRenameModal(
 
                                                                     service
-                                                                    .service_name
 
-                                                                }
+                                                                );
 
-                                                            </h3>
+                                                            }}
 
-                                                            <p
+                                                            className="
 
-                                                                className="
+                                                                rounded-xl
 
-                                                                    text-sm
+                                                                bg-cyan-500/15
 
-                                                                    text-[var(--text-secondary)]
+                                                                p-3
 
-                                                                "
+                                                                text-cyan-400
 
-                                                            >
+                                                                transition
 
-                                                            </p>
+                                                                hover:bg-cyan-500/25
 
-                                                        </div>
+                                                            "
+
+                                                        >
+
+                                                            <Pencil
+
+                                                                size={18}
+
+                                                            />
+
+                                                        </button>
+
+                                                        <button
+
+                                                            onClick={()=>{
+
+                                                                openDeleteModal(
+
+                                                                    service
+
+                                                                );
+
+                                                            }}
+
+                                                            className="
+
+                                                                rounded-xl
+
+                                                                bg-red-500/15
+
+                                                                p-3
+
+                                                                text-red-400
+
+                                                                transition
+
+                                                                hover:bg-red-500/25
+
+                                                            "
+
+                                                        >
+
+                                                            <Trash2
+
+                                                                size={18}
+
+                                                            />
+
+                                                        </button>
 
                                                     </div>
 
-                                                )
+                                                </div>
 
                                             )
 
-                                        }
+                                        )
 
-                                    </>
+                                    }
 
-                                }
+                                </>
+}
+                                                            {/* OTHER SERVICES */}
 
-                            </>
+                            {
 
-                        }
+                                otherServices.length>0
+
+                                &&
+
+                                <>
+
+                                    <h3
+
+                                        className="
+
+                                            mx-auto
+
+                                            mt-6
+                                            mb-3
+
+                                            max-w-[550px]
+
+                                            text-sm
+                                            font-semibold
+
+                                            uppercase
+
+                                            tracking-wider
+
+                                            text-[var(--text-secondary)]
+
+                                        "
+
+                                    >
+
+                                        Other Services
+
+                                    </h3>
+
+                                    {
+
+                                        otherServices.map(
+
+                                            service=>(
+
+                                                <div
+
+                                                    key={service.id}
+
+                                                    className="
+
+                                                        mx-auto
+
+                                                        mb-4
+
+                                                        flex
+
+                                                        max-w-[550px]
+
+                                                        items-center
+
+                                                        justify-between
+
+                                                        rounded-2xl
+
+                                                        border
+                                                        border-[var(--border)]
+
+                                                        bg-[var(--bg-primary)]
+
+                                                        px-6
+                                                        py-5
+
+                                                    "
+
+                                                >
+
+                                                    <div>
+
+                                                        <h3
+
+                                                            className="
+
+                                                                text-lg
+
+                                                                font-semibold
+
+                                                            "
+
+                                                        >
+
+                                                            {
+
+                                                                service.service_name
+
+                                                            }
+
+                                                        </h3>
+
+                                                    </div>
+
+                                                </div>
+
+                                            )
+
+                                        )
+
+                                    }
+
+                                </>
+
+                            }
+
+                        </>
+
+                    }
 
                 </div>
-
 
                 <button
 
@@ -712,12 +882,14 @@ function ManageServicesModal({
 
                         w-full
 
-                        py-3
-
                         rounded-xl
 
                         border
                         border-[var(--border)]
+
+                        py-3
+
+                        transition
 
                         hover:bg-zinc-800
 
@@ -733,7 +905,67 @@ function ManageServicesModal({
 
         </div>
 
-    );
+        <InputModal
+
+            isOpen={renameModalOpen}
+
+            title="Rename Service"
+
+            label="Service Name"
+
+            placeholder="Enter service name"
+
+            defaultValue={
+
+                selectedService?.service_name || ""
+
+            }
+
+            confirmText="Save"
+
+            loading={actionLoading}
+
+            onConfirm={handleRename}
+
+            onCancel={()=>{
+
+                setRenameModalOpen(false);
+
+                setSelectedService(null);
+
+            }}
+
+        />
+
+        <ConfirmationModal
+
+            isOpen={deleteModalOpen}
+
+            title="Delete Service"
+
+            message={`Are you sure you want to delete "${selectedService?.service_name}"? This action cannot be undone.`}
+
+            confirmText="Delete"
+
+            confirmColor="red"
+
+            loading={actionLoading}
+
+            onConfirm={handleDelete}
+
+            onCancel={()=>{
+
+                setDeleteModalOpen(false);
+
+                setSelectedService(null);
+
+            }}
+
+        />
+
+    </>
+
+);
 
 }
 

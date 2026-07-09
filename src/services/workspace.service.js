@@ -1333,7 +1333,6 @@ async function getWorkspaceGraph(
     workspaceId =
     Number(workspaceId);
 
-
     //----------------------------------
     // GET WORKSPACE DETAILS
     //----------------------------------
@@ -1348,17 +1347,13 @@ async function getWorkspaceGraph(
         select:{
 
             id:true,
-
             workspace_name:true,
-
             workspace_type:true,
-
             owner_user_id:true
 
         }
 
     });
-
 
     if(!workspace){
 
@@ -1368,13 +1363,11 @@ async function getWorkspaceGraph(
 
     }
 
-
     //----------------------------------
     // BUILD USER ROLES
     //----------------------------------
 
     const roles = [];
-
 
     if(
 
@@ -1389,7 +1382,6 @@ async function getWorkspaceGraph(
         );
 
     }
-
 
     const leadDomains =
     await prisma.domains.count({
@@ -1406,7 +1398,6 @@ async function getWorkspaceGraph(
 
     });
 
-
     if(
 
         leadDomains > 0
@@ -1418,7 +1409,6 @@ async function getWorkspaceGraph(
         );
 
     }
-
 
     const memberships =
     await prisma.workspace_members.findMany({
@@ -1438,7 +1428,6 @@ async function getWorkspaceGraph(
         }
 
     });
-
 
     for(
         const member
@@ -1461,7 +1450,6 @@ async function getWorkspaceGraph(
 
     }
 
-
     //----------------------------------
     // GET SERVICES
     //----------------------------------
@@ -1474,13 +1462,25 @@ async function getWorkspaceGraph(
             workspaceId
         },
 
+        include:{
+
+            domains:{
+
+                select:{
+
+                    domain_name:true
+
+                }
+
+            }
+
+        },
+
         orderBy:{
-            service_name:
-            "asc"
+            service_name:"asc"
         }
 
     });
-
 
     //----------------------------------
     // EMPTY GRAPH
@@ -1492,8 +1492,7 @@ async function getWorkspaceGraph(
 
         return {
 
-            id:
-            Number(workspace.id),
+            id:Number(workspace.id),
 
             workspace_name:
             workspace.workspace_name,
@@ -1503,8 +1502,7 @@ async function getWorkspaceGraph(
 
             roles,
 
-            graph_exists:
-            false,
+            graph_exists:false,
 
             message:
             "No services found in this workspace",
@@ -1516,7 +1514,6 @@ async function getWorkspaceGraph(
         };
 
     }
-
 
     //----------------------------------
     // GET DEPENDENCIES
@@ -1532,7 +1529,6 @@ async function getWorkspaceGraph(
 
     });
 
-
     //----------------------------------
     // BUILD NODES
     //----------------------------------
@@ -1542,21 +1538,17 @@ async function getWorkspaceGraph(
 
         service => ({
 
-            id:
-            String(service.id),
+            id:String(service.id),
 
-            type:
-            "default",
+            type:"service",
 
             data:{
 
                 label:
                 service.service_name,
 
-                domain_id:
-                String(
-                    service.domain_id
-                ),
+                domain_name:
+                service.domains.domain_name,
 
                 status:
                 service.status
@@ -1566,7 +1558,6 @@ async function getWorkspaceGraph(
         })
 
     );
-
 
     //----------------------------------
     // BUILD EDGES
@@ -1578,7 +1569,6 @@ async function getWorkspaceGraph(
         dependency => ({
 
             id:
-
             `e${dependency.source_service_id}-${dependency.target_service_id}`,
 
             source:
@@ -1595,15 +1585,13 @@ async function getWorkspaceGraph(
 
     );
 
-
     //----------------------------------
     // RETURN GRAPH
     //----------------------------------
 
     return {
 
-        id:
-        Number(workspace.id),
+        id:Number(workspace.id),
 
         workspace_name:
         workspace.workspace_name,
@@ -1613,8 +1601,7 @@ async function getWorkspaceGraph(
 
         roles,
 
-        graph_exists:
-        true,
+        graph_exists:true,
 
         nodes,
 
@@ -1626,15 +1613,11 @@ async function getWorkspaceGraph(
 
 
 
-
-
-
-
-
 async function generateImpactReport(
     workspaceId,
     data
 ){
+    console.log("service:",workspaceId)
 
     workspaceId =
     Number(workspaceId);
@@ -1685,9 +1668,26 @@ async function generateImpactReport(
     await prisma.services.findMany({
 
         where:{
+            workspace_id:workspaceId
+        },
 
-            workspace_id:
-            workspaceId
+        include:{
+
+            domains:{
+
+                select:{
+
+                    domain_name:true
+
+                }
+
+            }
+
+        },
+
+        orderBy:{
+
+            service_name:"asc"
 
         }
 
@@ -1832,59 +1832,73 @@ async function generateImpactReport(
     // DFS
     //--------------------------------------------------
 
-    const visited =
-    new Set();
+        const visited =
+        new Set();
 
-    const affectedDomains =
-    new Set();
+        const affectedDomains =
+        new Set();
 
-    function dfs(
-        serviceId
-    ){
+        const affectedEdgeIds = [];
 
-        if(
-            visited.has(
-                serviceId
-            )
-        ){
+        function dfs(serviceId){
 
-            return;
+            if(
 
-        }
+                visited.has(serviceId)
 
-        visited.add(
-            serviceId
-        );
+            ){
 
-        affectedDomains.add(
+                return;
 
-            serviceDomainMap.get(
-                serviceId
-            )
+            }
 
-        );
+            visited.add(serviceId);
 
-        const neighbours =
-        graph.get(
-            serviceId
-        ) || [];
+            affectedDomains.add(
 
-        for(
-            const neighbour
-            of neighbours
-        ){
+                serviceDomainMap.get(serviceId)
 
-            dfs(
-                neighbour
             );
 
+            const neighbours =
+
+                graph.get(serviceId) || [];
+
+            for(
+
+                const neighbour of neighbours
+
+            ){
+
+                if(
+
+                    !visited.has(neighbour)
+
+                ){
+
+                    affectedEdgeIds.push(
+
+                        `e${serviceId}-${neighbour}`
+
+                    );
+
+                    dfs(neighbour);
+
+                }
+
+            }
+
         }
 
-    }
+        dfs(
 
-    dfs(
-        Number(root_service_id)
-    );
+            Number(root_service_id)
+
+        );
+    
+    
+
+   
 
     //--------------------------------------------------
     // AFFECTED NAMES
@@ -1967,13 +1981,14 @@ async function generateImpactReport(
     //--------------------------------------------------
     // RETURN REPORT
     //--------------------------------------------------
+    
 
     return{
 
         rootService:{
 
             id:
-            rootService.id,
+            Number(rootService.id),
 
             name:
             rootService.service_name
@@ -1986,7 +2001,15 @@ async function generateImpactReport(
 
         affectedServices,
 
+        affectedServiceIds:
+        [...visited],
+
         affectedDomainNames,
+
+        affectedEdgeIds,
+
+        affectedDomainIds:
+        [...affectedDomains],
 
         serviceImpactPercentage,
 

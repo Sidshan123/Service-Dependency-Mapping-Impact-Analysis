@@ -25,6 +25,8 @@ import {
 }
 from "../services/workspaceService";
 
+import toast from "react-hot-toast";
+
 import InviteLeadModal from "./InviteLeadModal";
 import DomainLeadsModal from "./DomainLeadsModal";
 import InviteDeveloperModal from "./InviteDeveloperModal";
@@ -193,7 +195,7 @@ function OwnerLeadActions({
 
             }
 
-            alert(
+            toast.success(
 
                 response.message
 
@@ -202,7 +204,7 @@ function OwnerLeadActions({
         }
         catch(error){
 
-            alert(
+            toast.error(
 
                 error.response?.data?.message ||
 
@@ -252,7 +254,7 @@ function OwnerLeadActions({
 
             }
 
-            alert(
+            toast.success(
 
                 response.message
 
@@ -261,7 +263,7 @@ function OwnerLeadActions({
         }
         catch(error){
 
-            alert(
+            toast.error(
 
                 error.response?.data?.message ||
 

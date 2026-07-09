@@ -3,12 +3,34 @@ import { FileText } from "lucide-react";
 function ImpactSummary({
 
     selectedService,
-
     impactReport,
-
     onGenerateReport
 
 }){
+
+    function getSeverityStyle(level){
+
+        switch(level){
+
+            case "CRITICAL":
+
+                return "bg-red-500/10 text-red-400";
+
+            case "HIGH":
+
+                return "bg-orange-500/10 text-orange-400";
+
+            case "MEDIUM":
+
+                return "bg-yellow-500/10 text-yellow-400";
+
+            default:
+
+                return "bg-green-500/10 text-green-400";
+
+        }
+
+    }
 
     return(
 
@@ -20,21 +42,21 @@ function ImpactSummary({
                 bg-[var(--card-bg)]
                 p-8
                 h-[720px]
+                overflow-y-auto
             "
         >
 
             <h2
                 className="
+                    mb-8
                     text-3xl
                     font-bold
-                    mb-8
                 "
             >
 
                 Impact Summary
 
             </h2>
-
 
             {
 
@@ -43,9 +65,8 @@ function ImpactSummary({
                     <div
                         className="
                             flex
+                            h-[580px]
                             flex-col
-                            justify-center
-                            h-[560px]
                         "
                     >
 
@@ -57,48 +78,156 @@ function ImpactSummary({
 
                             (
 
-                                <div
-                                    className="
-                                        mb-8
-                                        p-5
-                                        rounded-2xl
-                                        bg-cyan-500/10
-                                        border
-                                        border-cyan-500/20
-                                    "
-                                >
+                                <>
 
-                                    <p
+                                    <div
                                         className="
-                                            text-sm
-                                            text-[var(--text-secondary)]
-                                            mb-2
+                                            rounded-2xl
+                                            border
+                                            border-cyan-500/20
+                                            bg-cyan-500/10
+                                            p-5
                                         "
                                     >
 
-                                        Selected Service
+                                        <p
+                                            className="
+                                                text-xs
+                                                uppercase
+                                                tracking-widest
+                                                text-zinc-400
+                                            "
+                                        >
 
-                                    </p>
+                                            Selected Service
 
+                                        </p>
 
-                                    <h3
+                                        <h3
+                                            className="
+                                                mt-2
+                                                text-2xl
+                                                font-semibold
+                                                text-cyan-300
+                                            "
+                                        >
+
+                                            {
+
+                                                selectedService.data.label
+
+                                            }
+
+                                        </h3>
+
+                                        <div
+                                            className="
+                                                mt-6
+                                                grid
+                                                grid-cols-2
+                                                gap-5
+                                            "
+                                        >
+
+                                            <div>
+
+                                                <p
+                                                    className="
+                                                        text-xs
+                                                        uppercase
+                                                        text-zinc-500
+                                                    "
+                                                >
+
+                                                    Domain
+
+                                                </p>
+
+                                                <p
+                                                    className="
+                                                        mt-2
+                                                        font-medium
+                                                    "
+                                                >
+
+                                                    {
+
+                                                        selectedService.data.domain_name
+
+                                                    }
+
+                                                </p>
+
+                                            </div>
+
+                                            <div>
+
+                                                <p
+                                                    className="
+                                                        text-xs
+                                                        uppercase
+                                                        text-zinc-500
+                                                    "
+                                                >
+
+                                                    Status
+
+                                                </p>
+
+                                                <span
+                                                    className="
+                                                        mt-2
+                                                        inline-flex
+                                                        rounded-full
+                                                        bg-green-500/10
+                                                        px-3
+                                                        py-1
+                                                        text-sm
+                                                        font-semibold
+                                                        text-green-400
+                                                    "
+                                                >
+
+                                                    {
+
+                                                        selectedService.data.status
+
+                                                    }
+
+                                                </span>
+
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+                                    <div
                                         className="
-                                            text-2xl
-                                            font-semibold
-                                            text-cyan-300
+                                            mt-6
+                                            rounded-xl
+                                            border
+                                            border-zinc-800
+                                            bg-zinc-900
+                                            p-4
                                         "
                                     >
 
-                                        {
+                                        <p
+                                            className="
+                                                text-sm
+                                                leading-7
+                                                text-zinc-400
+                                            "
+                                        >
 
-                                            selectedService
-                                            .name
+                                            Generate an impact report to identify every downstream service and domain affected by changes to this service.
 
-                                        }
+                                        </p>
 
-                                    </h3>
+                                    </div>
 
-                                </div>
+                                </>
 
                             )
 
@@ -106,50 +235,61 @@ function ImpactSummary({
 
                             (
 
-                                <p
+                                <div
                                     className="
-                                        text-[var(--text-secondary)]
-                                        mb-8
-                                        text-lg
-                                        text-center
+                                        flex
+                                        flex-1
+                                        items-center
+                                        justify-center
                                     "
                                 >
 
-                                    Select a service node to generate
-                                    an impact report.
+                                    <p
+                                        className="
+                                            text-center
+                                            text-lg
+                                            leading-7
+                                            text-zinc-400
+                                        "
+                                    >
 
-                                </p>
+                                        Select a service node from the graph to generate an impact report.
+
+                                    </p>
+
+                                </div>
 
                             )
 
                         }
 
-
                         <button
 
                             onClick={onGenerateReport}
 
+                            disabled={!selectedService}
+
                             className="
-                                w-full
+                                mt-auto
                                 flex
                                 items-center
                                 justify-center
                                 gap-3
-                                py-4
                                 rounded-xl
                                 bg-cyan-600
-                                hover:bg-cyan-500
-                                transition
+                                py-4
                                 font-semibold
                                 text-white
-                                shadow-lg
-                                shadow-cyan-900/30
+                                transition
+                                hover:bg-cyan-500
+                                disabled:cursor-not-allowed
+                                disabled:bg-zinc-700
+                                disabled:text-zinc-400
                             "
+
                         >
 
-                            <FileText
-                                size={18}
-                            />
+                            <FileText size={18}/>
 
                             Generate Impact Report
 
@@ -160,9 +300,7 @@ function ImpactSummary({
                 )
 
             }
-
-
-            {
+                        {
 
                 impactReport && (
 
@@ -170,25 +308,28 @@ function ImpactSummary({
                         className="
                             flex
                             flex-col
-                            gap-7
+                            gap-6
                         "
                     >
 
+                        {/* Root Service */}
+
                         <div
                             className="
-                                p-5
                                 rounded-2xl
-                                bg-cyan-500/10
                                 border
                                 border-cyan-500/20
+                                bg-cyan-500/10
+                                p-5
                             "
                         >
 
                             <p
                                 className="
-                                    text-sm
-                                    text-[var(--text-secondary)]
-                                    mb-2
+                                    text-xs
+                                    uppercase
+                                    tracking-widest
+                                    text-zinc-400
                                 "
                             >
 
@@ -196,233 +337,127 @@ function ImpactSummary({
 
                             </p>
 
-
                             <h3
                                 className="
+                                    mt-2
                                     text-2xl
                                     font-semibold
                                     text-cyan-300
                                 "
                             >
 
-                                {
-
-                                    impactReport
-                                    .rootService
-                                    ?.name
-
-                                }
+                                {impactReport.rootService?.name}
 
                             </h3>
 
                         </div>
 
+                        {/* Metrics */}
 
                         <div
                             className="
-                                flex
-                                justify-between
-                                text-lg
+                                grid
+                                grid-cols-2
+                                gap-4
                             "
                         >
 
-                            <span>
+                            <MetricCard
 
-                                Affected Services
+                                title="Affected Services"
 
-                            </span>
+                                value={impactReport.affectedServicesCount}
 
-                            <span
-                                className="
-                                    font-semibold
-                                "
-                            >
+                            />
 
-                                {
+                            <MetricCard
 
-                                    impactReport
-                                    .affectedServicesCount
+                                title="Affected Domains"
 
-                                }
+                                value={impactReport.affectedDomainsCount}
 
-                            </span>
+                            />
+
+                            <MetricCard
+
+                                title="Service Impact"
+
+                                value={`${impactReport.serviceImpactPercentage}%`}
+
+                                accent="text-cyan-400"
+
+                            />
+
+                            <MetricCard
+
+                                title="Domain Impact"
+
+                                value={`${impactReport.domainImpactPercentage}%`}
+
+                                accent="text-cyan-400"
+
+                            />
 
                         </div>
 
+                        {/* Severity */}
 
                         <div
                             className="
                                 flex
+                                items-center
                                 justify-between
-                                text-lg
+                                rounded-xl
+                                border
+                                border-zinc-800
+                                bg-zinc-900
+                                px-5
+                                py-4
                             "
                         >
-
-                            <span>
-
-                                Affected Domains
-
-                            </span>
 
                             <span
                                 className="
-                                    font-semibold
+                                    text-sm
+                                    uppercase
+                                    tracking-wider
+                                    text-zinc-400
                                 "
                             >
-
-                                {
-
-                                    impactReport
-                                    .affectedDomainsCount
-
-                                }
-
-                            </span>
-
-                        </div>
-
-
-                        <div
-                            className="
-                                flex
-                                justify-between
-                                text-lg
-                            "
-                        >
-
-                            <span>
-
-                                Service Impact
-
-                            </span>
-
-                            <span
-                                className="
-                                    text-cyan-400
-                                    font-bold
-                                "
-                            >
-
-                                {
-
-                                    impactReport
-                                    .serviceImpactPercentage
-
-                                }%
-
-                            </span>
-
-                        </div>
-
-
-                        <div
-                            className="
-                                flex
-                                justify-between
-                                text-lg
-                            "
-                        >
-
-                            <span>
-
-                                Domain Impact
-
-                            </span>
-
-                            <span
-                                className="
-                                    text-cyan-400
-                                    font-bold
-                                "
-                            >
-
-                                {
-
-                                    impactReport
-                                    .domainImpactPercentage
-
-                                }%
-
-                            </span>
-
-                        </div>
-
-
-                        <div
-                            className="
-                                flex
-                                justify-between
-                                text-lg
-                            "
-                        >
-
-                            <span>
 
                                 Severity
 
                             </span>
 
                             <span
-
-                                className={
-
-                                    impactReport
-                                    .severityLevel ===
-                                    "CRITICAL"
-
-                                    ?
-
-                                    "text-red-500 font-bold"
-
-                                    :
-
-                                    impactReport
-                                    .severityLevel ===
-                                    "HIGH"
-
-                                    ?
-
-                                    "text-orange-500 font-bold"
-
-                                    :
-
-                                    impactReport
-                                    .severityLevel ===
-                                    "MEDIUM"
-
-                                    ?
-
-                                    "text-yellow-500 font-bold"
-
-                                    :
-
-                                    "text-green-500 font-bold"
-
-                                }
-
+                                className={`
+                                    rounded-full
+                                    px-4
+                                    py-2
+                                    text-sm
+                                    font-semibold
+                                    ${getSeverityStyle(
+                                        impactReport.severityLevel
+                                    )}
+                                `}
                             >
 
-                                {
-
-                                    impactReport
-                                    .severityLevel
-
-                                }
+                                {impactReport.severityLevel}
 
                             </span>
 
                         </div>
 
+                        {/* Affected Services */}
 
-                        <div
-                            className="mt-4"
-                        >
+                        <div>
 
                             <p
                                 className="
-                                    text-sm
-                                    text-[var(--text-secondary)]
                                     mb-3
+                                    text-sm
+                                    font-medium
+                                    text-zinc-400
                                 "
                             >
 
@@ -440,24 +475,23 @@ function ImpactSummary({
 
                                 {
 
-                                    impactReport
-                                    .affectedServices
-                                    ?.map(
+                                    impactReport.affectedServices?.map(
 
-                                        service => (
+                                        service=>(
 
                                             <span
 
                                                 key={service}
 
                                                 className="
+                                                    rounded-full
+                                                    bg-cyan-500/15
                                                     px-3
                                                     py-1
-                                                    rounded-full
-                                                    bg-cyan-500/20
-                                                    text-cyan-300
                                                     text-sm
+                                                    text-cyan-300
                                                 "
+
                                             >
 
                                                 {service}
@@ -474,16 +508,16 @@ function ImpactSummary({
 
                         </div>
 
+                        {/* Affected Domains */}
 
-                        <div
-                            className="mt-2"
-                        >
+                        <div>
 
                             <p
                                 className="
-                                    text-sm
-                                    text-[var(--text-secondary)]
                                     mb-3
+                                    text-sm
+                                    font-medium
+                                    text-zinc-400
                                 "
                             >
 
@@ -501,24 +535,23 @@ function ImpactSummary({
 
                                 {
 
-                                    impactReport
-                                    .affectedDomainNames
-                                    ?.map(
+                                    impactReport.affectedDomainNames?.map(
 
-                                        domain => (
+                                        domain=>(
 
                                             <span
 
                                                 key={domain}
 
                                                 className="
+                                                    rounded-full
+                                                    bg-purple-500/15
                                                     px-3
                                                     py-1
-                                                    rounded-full
-                                                    bg-purple-500/20
-                                                    text-purple-300
                                                     text-sm
+                                                    text-purple-300
                                                 "
+
                                             >
 
                                                 {domain}
@@ -535,33 +568,29 @@ function ImpactSummary({
 
                         </div>
 
-
                         <button
 
                             onClick={onGenerateReport}
 
                             className="
-                                mt-8
-                                w-full
+                                mt-2
                                 flex
+                                w-full
                                 items-center
                                 justify-center
                                 gap-3
-                                py-4
                                 rounded-xl
                                 bg-cyan-600
-                                hover:bg-cyan-500
-                                transition
+                                py-4
                                 font-semibold
                                 text-white
-                                shadow-lg
-                                shadow-cyan-900/30
+                                transition
+                                hover:bg-cyan-500
                             "
+
                         >
 
-                            <FileText
-                                size={18}
-                            />
+                            <FileText size={18}/>
 
                             Regenerate Report
 
@@ -572,6 +601,58 @@ function ImpactSummary({
                 )
 
             }
+
+        </div>
+
+    );
+
+}
+
+function MetricCard({
+
+    title,
+    value,
+    accent=""
+
+}){
+
+    return(
+
+        <div
+            className="
+                rounded-xl
+                border
+                border-zinc-800
+                bg-zinc-900
+                p-4
+            "
+        >
+
+            <p
+                className="
+                    text-xs
+                    uppercase
+                    tracking-wider
+                    text-zinc-500
+                "
+            >
+
+                {title}
+
+            </p>
+
+            <h3
+                className={`
+                    mt-2
+                    text-3xl
+                    font-bold
+                    ${accent}
+                `}
+            >
+
+                {value}
+
+            </h3>
 
         </div>
 

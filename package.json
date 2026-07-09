@@ -16,6 +16,7 @@
     "nodemon": "^3.1.14"
   },
   "dependencies": {
+    "@dagrejs/dagre": "^3.0.0",
     "@prisma/client": "^6.19.3",
     "@xyflow/react": "^12.11.1",
     "bcrypt": "^6.0.0",
@@ -24,6 +25,7 @@
     "express": "^5.2.1",
     "geist": "^1.7.2",
     "jsonwebtoken": "^9.0.3",
-    "prisma": "^6.19.3"
+    "prisma": "^6.19.3",
+    "reactflow": "^11.11.4"
   }
 }

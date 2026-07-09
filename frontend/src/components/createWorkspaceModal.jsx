@@ -8,6 +8,8 @@ import {
 }
 from "lucide-react";
 
+import toast from "react-hot-toast";
+
 function CreateWorkspaceModal({
 
     onClose,
@@ -39,7 +41,7 @@ function CreateWorkspaceModal({
         }
         catch(error){
 
-            alert(
+            toast.error(
 
                 error.response?.data?.message ||
 

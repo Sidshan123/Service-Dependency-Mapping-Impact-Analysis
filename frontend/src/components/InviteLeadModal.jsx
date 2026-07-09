@@ -16,6 +16,7 @@ import {
 }
 from "../services/workspaceService";
 
+import toast from "react-hot-toast";
 
 function InviteLeadModal({
 
@@ -82,7 +83,7 @@ function InviteLeadModal({
         }
         catch(error){
 
-            alert(
+            toast.error(
 
                 error.response
                 ?.data

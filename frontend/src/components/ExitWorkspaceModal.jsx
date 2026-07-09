@@ -28,6 +28,8 @@ import {
 }
 from "../services/workspaceService";
 
+import toast from "react-hot-toast";
+
 function ExitWorkspaceModal({
 
     workspaceId,
@@ -101,6 +103,7 @@ function ExitWorkspaceModal({
     useEffect(
 
         ()=>{
+            console.log("fetch exit options")
 
             fetchExitOptions();
 
@@ -148,7 +151,7 @@ function ExitWorkspaceModal({
         }
         catch(error){
 
-            alert(
+            toast.error(
 
                 error.response?.data?.message ||
 
@@ -255,7 +258,7 @@ function ExitWorkspaceModal({
 
                 ){
 
-                    alert(
+                    toast.error(
 
                         "Please select a new workspace owner."
 
@@ -296,7 +299,7 @@ function ExitWorkspaceModal({
 
                 ){
 
-                    alert(
+                    toast.error(
 
                         "Please select a replacement lead for every domain."
 
@@ -355,7 +358,7 @@ function ExitWorkspaceModal({
 
                 ){
 
-                    alert(
+                    toast.error(
 
                         "Please select a new workspace owner."
 
@@ -379,7 +382,7 @@ function ExitWorkspaceModal({
 
                 ){
 
-                    alert(
+                    toast.error(
 
                         "Please select a replacement lead for every domain."
 
@@ -439,7 +442,7 @@ function ExitWorkspaceModal({
 
             );
 
-            alert(
+            toast.success(
 
                 response.message
 
@@ -454,7 +457,7 @@ function ExitWorkspaceModal({
         }
         catch(error){
 
-            alert(
+            toast.error(
 
                 error.response?.data?.message ||
 

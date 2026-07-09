@@ -6,6 +6,8 @@ import {
 }
 from "react";
 
+import toast from "react-hot-toast";
+
 import {
 
     X
@@ -89,11 +91,13 @@ function CreateDependencyModal({
 
             console.error(error);
 
-            alert(
+            toast.error(
 
-                "Failed to load services."
+            error.response?.data?.message ||
 
-            );
+            "Failed to load domains."
+
+        );
 
         }
 
@@ -110,7 +114,7 @@ function CreateDependencyModal({
 
         ){
 
-            alert(
+            toast.success(
 
                 "Please select both services"
 
@@ -128,7 +132,7 @@ function CreateDependencyModal({
 
         ){
 
-            alert(
+            toast.success(
 
                 "Source and Target services cannot be the same"
 
@@ -157,7 +161,7 @@ function CreateDependencyModal({
 
             });
 
-            alert(
+            toast.success(
 
                 response.message ||
 
@@ -175,9 +179,9 @@ function CreateDependencyModal({
 
             console.error(error);
 
-            alert(
+            toast.error(
 
-                error.response?.data?.message ||
+                error.response?.data?.message || error.message ||
 
                 "Failed to create dependency."
 

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 
 import {
 
@@ -133,7 +134,7 @@ function WorkspaceActions({
 
             }
 
-            alert(
+            toast.success(
 
                 response.message
 
@@ -142,7 +143,7 @@ function WorkspaceActions({
         }
         catch(error){
 
-            alert(
+            toast.error(
 
                 error.response?.data?.message ||
 
@@ -191,7 +192,7 @@ function WorkspaceActions({
 
             }
 
-            alert(
+            toast.success(
 
                 response.message
 
@@ -200,7 +201,7 @@ function WorkspaceActions({
         }
         catch(error){
 
-            alert(
+            toast.error(
 
                 error.response?.data?.message ||
 

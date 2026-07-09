@@ -6,6 +6,8 @@ import {
 }
 from "react";
 
+import toast from "react-hot-toast";
+
 import {
 
     X
@@ -85,9 +87,11 @@ function CreateServiceModal({
 
         catch(error){
 
-            console.error(error);
 
-            alert(
+
+            toast.error(
+
+                error.response?.data?.message ||
 
                 "Failed to load domains."
 
@@ -108,7 +112,7 @@ function CreateServiceModal({
 
         ){
 
-            alert(
+            toast.success(
 
                 "Please fill all fields"
 
@@ -133,7 +137,7 @@ function CreateServiceModal({
 
             });
 
-            alert(
+            toast.success(
 
                 response.message ||
 
@@ -151,7 +155,7 @@ function CreateServiceModal({
 
             console.error(error);
 
-            alert(
+            toast.error(
 
                 error.response?.data?.message ||
 

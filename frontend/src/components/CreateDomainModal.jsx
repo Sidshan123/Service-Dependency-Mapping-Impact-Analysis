@@ -12,6 +12,9 @@ import {
 }
 from "../services/workspaceService";
 
+
+import toast from "react-hot-toast";
+
 function CreateDomainModal({
 
     workspace,
@@ -87,7 +90,7 @@ function CreateDomainModal({
 
                 if(isPersonal){
 
-                    alert(
+                    toast.success(
                         "Domain created successfully"
                     );
 
@@ -107,16 +110,16 @@ function CreateDomainModal({
 
             }
 
-            alert(
+            toast.success(
                 response.message
             );
 
         }
         catch(error){
 
-            alert(
+            toast.error(
 
-                error.response?.data?.message ||
+                error.response?.data?.message || error.message ||
 
                 "Failed to create domain"
 

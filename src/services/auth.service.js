@@ -124,7 +124,119 @@ async function login(data) {
 
 }
 
+
+
+
+async function deleteAccount(
+
+    userId
+
+){
+
+    userId =
+    Number(userId);
+
+    //----------------------------------
+    // USER MUST NOT OWN A WORKSPACE
+    //----------------------------------
+
+    const ownedWorkspaces =
+    await prisma.workspaces.findMany({
+
+        where:{
+
+            owner_user_id:
+            userId
+
+        }
+
+    });
+
+    if(
+
+        ownedWorkspaces.length > 0
+
+    ){
+
+        throw new Error(
+
+            "Transfer or delete all owned workspaces before deleting your account."
+
+        );
+
+    }
+
+    //----------------------------------
+    // USER MUST NOT BE A DOMAIN LEAD
+    //----------------------------------
+
+    const leadDomains =
+    await prisma.domains.findMany({
+
+        where:{
+
+            lead_user_id:
+            userId
+
+        }
+
+    });
+
+    if(
+
+        leadDomains.length > 0
+
+    ){
+
+        throw new Error(
+
+            "Transfer all domain leadership before deleting your account."
+
+        );
+
+    }
+
+    //----------------------------------
+    // REMOVE FROM WORKSPACES
+    //----------------------------------
+
+    await prisma.workspace_members.deleteMany({
+
+        where:{
+
+            user_id:
+            userId
+
+        }
+
+    });
+
+    //----------------------------------
+    // DELETE USER
+    //----------------------------------
+
+    await prisma.users.delete({
+
+        where:{
+
+            id:userId
+
+        }
+
+    });
+
+    return{
+
+        message:
+
+        "Account deleted successfully."
+
+    };
+
+}
+
 module.exports = {
     register,
-    login
+    login,
+    deleteAccount
 };

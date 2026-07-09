@@ -8,6 +8,8 @@ import {
 }
 from "../services/workspaceService";
 
+import toast from "react-hot-toast";
+
 function JoinWorkspaceCards({
 
     workspaceId
@@ -63,9 +65,8 @@ function JoinWorkspaceCards({
         }
         catch(error){
 
-    console.log(error.response?.data);
 
-    alert(
+    toast.error(
 
         error.response?.data?.message
         ||
@@ -102,7 +103,7 @@ function JoinWorkspaceCards({
         }
         catch(error){
 
-            alert(
+            toast.error(
 
                 error.response?.data?.message
                 ||

@@ -22,6 +22,8 @@ import {
 }
 from "../services/workspaceService";
 
+import toast from "react-hot-toast";
+
 
 function InviteDeveloperModal({
 
@@ -89,7 +91,7 @@ function InviteDeveloperModal({
 
         catch(error){
 
-            alert(
+            toast.error(
 
                 error.response?.data?.message
 

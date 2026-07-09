@@ -14,6 +14,7 @@ import {
 
 }
 from "lucide-react";
+import toast from "react-hot-toast";
 
 import {
 
@@ -105,8 +106,12 @@ function Dashboard() {
                 error
             );
 
-            alert(
-                "Failed to fetch workspaces"
+            toast.error(
+
+                error.response?.data?.message ||
+
+                "Failed to fetch workspaces."
+
             );
 
         }
@@ -186,7 +191,7 @@ function Dashboard() {
         }
         catch (error) {
 
-            alert(
+            toast.error(
 
                 error.response
                 ?.data
@@ -219,7 +224,7 @@ function Dashboard() {
         }
         catch (error) {
 
-            alert(
+            toast.error(
 
                 error.response
                 ?.data
@@ -545,39 +550,6 @@ function Dashboard() {
 
                             </p>
 
-                            <button
-
-                                onClick={()=>{
-
-                                    setShowCreateModal(
-
-                                        true
-
-                                    );
-
-                                }}
-
-                                className="
-                                mt-8
-                                flex
-                                items-center
-                                gap-2
-                                rounded-2xl
-                                bg-[var(--accent-primary)]
-                                px-6
-                                py-3
-                                font-medium
-                                hover:bg-[var(--accent-hover)]
-                                transition
-                                "
-
-                            >
-
-                                <Plus size={18}/>
-
-                                Create Workspace
-
-                            </button>
 
                         </div>
 
