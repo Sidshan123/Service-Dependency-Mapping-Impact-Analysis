@@ -1,6 +1,6 @@
-# 🚀 Service Dependency Mapping & Impact Analysis Platform
+# 🚀 Blast Radius Analysis 
 
-### 💥 Blast Radius Analysis for Distributed Systems
+### 💥 Understand the Ripple Before It Happens
 
 
 
