@@ -37,9 +37,19 @@ It provides:
 
 # 🏗️ System Architecture
 
+<p align="center">
+  <img src="docs/images/architecture.png" width="950"/>
+</p>
 
+------------------------------------------------------------------------
 
+## 🛡️ Role-Based Access Control (RBAC)
 
+<p align="center">
+  <img src="docs/images/rbac.png" width="950"/>
+</p>
+
+------------------------------------------------------------------------
 
 # 🐳 Deployment
 
@@ -54,20 +64,103 @@ It provides:
 
 ------------------------------------------------------------------------
 
-# 📸 Screenshots
 
-Add these images:
+# 📸 Application Screenshots
 
--   login.png
--   dashboard.png
--   owner-dashboard.png
--   owner-lead-dashboard.png
--   lead-dashboard.png
--   developer-dashboard.png
--   personal-workspace.png
--   clone-workspace.png
--   dependency-graph.png
--   blast-radius-analysis.png
+## 🔐 Login
+
+<p align="center">
+  <img src="docs/images/login.jpeg" width="950"/>
+</p>
+
+Secure JWT-based authentication with Role-Based Access Control.
+
+---
+
+## 📊 Dashboard
+
+<p align="center">
+  <img src="docs/images/dashboard.png" width="950"/>
+</p>
+
+Centralized dashboard for creating, joining, and managing workspaces.
+
+---
+
+## 👑 Workspace Owner Dashboard
+
+<p align="center">
+  <img src="docs/images/owner-dashboard.png" width="950"/>
+</p>
+
+Manage workspaces, domains, services, dependencies, developers, and generate impact reports.
+
+---
+
+## 👨‍💼 Owner + Domain Lead Dashboard
+
+<p align="center">
+  <img src="docs/images/owner-lead-dashboard.png" width="950"/>
+</p>
+
+Combined permissions for users acting as both Workspace Owner and Domain Lead.
+
+---
+
+## 👨‍💻 Domain Lead Dashboard
+
+<p align="center">
+  <img src="docs/images/lead-dashboard.jpeg" width="950"/>
+</p>
+
+Manage assigned domains, services, dependencies, and collaborate with developers.
+
+---
+
+## 🧑‍💻 Developer Dashboard
+
+<p align="center">
+  <img src="docs/images/developer-dashboard.jpeg" width="950"/>
+</p>
+
+Developers have read-only access to the team workspace and can clone it into an isolated personal workspace.
+
+---
+
+## 🧪 Personal Workspace
+
+<p align="center">
+  <img src="docs/images/personal-workspace.png" width="950"/>
+</p>
+
+Clone an entire team workspace into a personal workspace for experimentation and independent development.
+
+An isolated environment where developers can safely modify services and dependencies without affecting the shared workspace.
+
+
+---
+
+## 🌐 Service Dependency Graph
+
+<p align="center">
+  <img src="docs/images/dependency-graph.png" width="950"/>
+</p>
+
+Interactive dependency visualization with automatic graph layout, search, zoom, fullscreen mode, and dependency navigation.
+
+---
+
+## 💥 Blast Radius Analysis
+
+<p align="center">
+  <img src="docs/images/blast-radius-analysis.png" width="950"/>
+</p>
+
+<p align="center">
+  <img src="docs/images/blast-radius-analysis-2.png" width="950"/>
+</p>
+
+Depth First Search (DFS) based traversal highlights impacted services and dependency paths while generating comprehensive impact reports.
 
 ------------------------------------------------------------------------
 
