@@ -165,19 +165,19 @@ function GraphCanvas({
 
                     ){
 
-                        opacity =
+                            opacity =
 
-                            isImpacted || isSelected
+                                isImpacted || isSelected
 
-                            ?
+                                ?
 
-                            1
+                                1
 
-                            :
+                                :
 
-                            0.08;
+                                0.45;
 
-                    }
+                        }
 
                     //----------------------------------
                     // SEARCH HIGHLIGHTING
@@ -199,7 +199,7 @@ function GraphCanvas({
 
                             :
 
-                            0.08;
+                            0.18;
 
                     }
 
@@ -317,7 +317,7 @@ function GraphCanvas({
 
                                 :
 
-                                0.35
+                                0.5
 
                         }
 

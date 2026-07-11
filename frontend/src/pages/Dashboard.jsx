@@ -174,28 +174,28 @@ function Dashboard() {
 
     async function handleRenameSave(
         workspace
-    ) {
+    ){
 
-        try {
+        try{
 
             await renameWorkspace(
-                workspace
+
+                workspace.id,
+
+                workspace.workspace_name
+
             );
 
-            setRenameWorkspaceData(
-                null
-            );
+            setRenameWorkspaceData(null);
 
             await fetchWorkspaces();
 
         }
-        catch (error) {
+        catch(error){
 
             toast.error(
 
-                error.response
-                ?.data
-                ?.message ||
+                error.response?.data?.message ||
 
                 "Rename failed"
 
@@ -212,7 +212,7 @@ function Dashboard() {
         try {
 
             await deleteWorkspace(
-                workspace
+                workspace.id,
             );
 
             setDeleteWorkspaceData(

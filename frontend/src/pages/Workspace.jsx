@@ -290,6 +290,34 @@ function Workspace(){
         }
 
     }
+
+
+
+    function handleResetAnalysis(){
+
+    setSelectedService(null);
+
+    setImpactReport(null);
+
+    setHighlightedServices([]);
+
+    setHighlightedEdges([]);
+
+}
+
+    function handleSelectService(node){
+
+        setSelectedService(node);
+
+        setImpactReport(null);
+
+        setHighlightedServices([]);
+
+        setHighlightedEdges([]);
+
+    }
+
+
     function handleResetAnalysis(){
 
         setSelectedService(null);
@@ -633,7 +661,7 @@ function Workspace(){
 
                     selectedService={selectedService}
 
-                    onSelectService={setSelectedService}
+                    onSelectService={handleSelectService}
 
                     highlightedServices={highlightedServices}
 

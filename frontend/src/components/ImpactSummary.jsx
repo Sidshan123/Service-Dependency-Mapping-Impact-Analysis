@@ -265,33 +265,42 @@ function ImpactSummary({
 
                         <button
 
-                            onClick={onGenerateReport}
+                        onClick={onGenerateReport}
 
-                            disabled={!selectedService}
+                        disabled={!selectedService}
 
-                            className="
-                                mt-auto
-                                flex
-                                items-center
-                                justify-center
-                                gap-3
-                                rounded-xl
-                                bg-cyan-600
-                                py-4
-                                font-semibold
-                                text-white
-                                transition
-                                hover:bg-cyan-500
-                                disabled:cursor-not-allowed
-                                disabled:bg-zinc-700
-                                disabled:text-zinc-400
-                            "
+                        className={`
+                            mt-2
+                            flex
+                            w-full
+                            items-center
+                            justify-center
+                            gap-3
+                            rounded-xl
+                            py-4
+                            font-semibold
+                            transition
 
-                        >
+                            ${
+                                !selectedService
+
+                                ?
+
+                                "bg-zinc-700 text-zinc-400 cursor-not-allowed"
+
+                                :
+
+                                "bg-cyan-600 text-white hover:bg-cyan-500"
+                            }
+
+                        `}
+
+                    >
+
 
                             <FileText size={18}/>
 
-                            Generate Impact Report
+                            Generate Report
 
                         </button>
 
@@ -570,7 +579,7 @@ function ImpactSummary({
 
                         <button
 
-                            onClick={onGenerateReport}
+                            disabled
 
                             className="
                                 mt-2
@@ -580,19 +589,18 @@ function ImpactSummary({
                                 justify-center
                                 gap-3
                                 rounded-xl
-                                bg-cyan-600
+                                bg-zinc-700
                                 py-4
                                 font-semibold
-                                text-white
-                                transition
-                                hover:bg-cyan-500
+                                text-zinc-400
+                                cursor-not-allowed
                             "
 
                         >
 
                             <FileText size={18}/>
 
-                            Regenerate Report
+                            Generate Report
 
                         </button>
 

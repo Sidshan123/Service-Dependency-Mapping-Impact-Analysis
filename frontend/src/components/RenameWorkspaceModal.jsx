@@ -162,10 +162,13 @@ function RenameWorkspaceModal({
                             px-6
                             py-3
                             rounded-2xl
-                            bg-[var(--gold-primary)]
-                            text-black
+                            bg-cyan-600
+                            text-white
                             font-semibold
+                            hover:bg-cyan-500
+                            transition
                             cursor-pointer
+                            disabled:opacity-50
                             "
                         >
 
